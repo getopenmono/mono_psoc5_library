@@ -50,7 +50,7 @@ $(BUILD_DIR):
 
 .c.o: $(BUILD_DIR)
 	@echo "Compiling C: $(notdir $<)"
-	@$(CC) $(CC_FLAGS) $(ONLY_C_FLAGS) $(CDEFS) $(INCS) -o $(BUILD_DIR)/$(notdir $@) $<
+	$(CC) $(CC_FLAGS) $(ONLY_C_FLAGS) $(CDEFS) $(INCS) -o $(BUILD_DIR)/$(notdir $@) $<
 
 .cpp.o: $(BUILD_DIR)
 	@echo "Compiling C++: $(notdir $<)"
