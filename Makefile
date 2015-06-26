@@ -91,7 +91,7 @@ appFiles:
 	@echo $(OBJECTS)
 
 clean:
-	$(RM) $(addprefix $(BUILD_DIR)/, $(notdir $(OBJECTS))) $(addprefix $(BUILD_DIR)/, $(notdir $(SYS_OBJECTS))) $(TARGET).elf $(TARGET).bin
+	$(RM) $(addprefix $(BUILD_DIR)/, $(notdir $(OBJECTS))) $(addprefix $(BUILD_DIR)/, $(notdir $(SYS_OBJECTS))) $(TARGET).elf $(TARGET).bin include/* lib/monoCyLib.a
 
 summary: $(TARGET).elf
 	$(ELFTOOL) -S $(TARGET).elf
