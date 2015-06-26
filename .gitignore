@@ -1,3 +1,5 @@
 build
+include
+lib/monoCyLib.a
 *.elf
 *.map
