@@ -1,5 +1,5 @@
 /*******************************************************************************
-* File Name: SPI_INTR.h  
+* File Name: RP_INTR.h  
 * Version 2.10
 *
 * Description:
@@ -14,8 +14,8 @@
 * the software package with which this file was provided.
 *******************************************************************************/
 
-#if !defined(CY_PINS_SPI_INTR_ALIASES_H) /* Pins SPI_INTR_ALIASES_H */
-#define CY_PINS_SPI_INTR_ALIASES_H
+#if !defined(CY_PINS_RP_INTR_ALIASES_H) /* Pins RP_INTR_ALIASES_H */
+#define CY_PINS_RP_INTR_ALIASES_H
 
 #include "cytypes.h"
 #include "cyfitter.h"
@@ -25,8 +25,8 @@
 /***************************************
 *              Constants        
 ***************************************/
-#define SPI_INTR_0		(SPI_INTR__0__PC)
+#define RP_INTR_0		(RP_INTR__0__PC)
 
-#endif /* End Pins SPI_INTR_ALIASES_H */
+#endif /* End Pins RP_INTR_ALIASES_H */
 
 /* [] END OF FILE */

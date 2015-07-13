@@ -1,5 +1,5 @@
 /*******************************************************************************
-* File Name: SPI_ISR.c  
+* File Name: RP_ISR.c  
 * Version 1.70
 *
 *  Description:
@@ -18,14 +18,14 @@
 
 #include <cydevice_trm.h>
 #include <CyLib.h>
-#include <SPI_ISR.h>
+#include <RP_ISR.h>
 
-#if !defined(SPI_ISR__REMOVED) /* Check for removal by optimization */
+#if !defined(RP_ISR__REMOVED) /* Check for removal by optimization */
 
 /*******************************************************************************
 *  Place your includes, defines and code here 
 ********************************************************************************/
-/* `#START SPI_ISR_intc` */
+/* `#START RP_ISR_intc` */
 
 /* `#END` */
 
@@ -41,7 +41,7 @@ CY_ISR_PROTO(IntDefaultHandler);
 
 
 /*******************************************************************************
-* Function Name: SPI_ISR_Start
+* Function Name: RP_ISR_Start
 ********************************************************************************
 *
 * Summary:
@@ -57,24 +57,24 @@ CY_ISR_PROTO(IntDefaultHandler);
 *   None
 *
 *******************************************************************************/
-void SPI_ISR_Start(void)
+void RP_ISR_Start(void)
 {
     /* For all we know the interrupt is active. */
-    SPI_ISR_Disable();
+    RP_ISR_Disable();
 
-    /* Set the ISR to point to the SPI_ISR Interrupt. */
-    SPI_ISR_SetVector(&SPI_ISR_Interrupt);
+    /* Set the ISR to point to the RP_ISR Interrupt. */
+    RP_ISR_SetVector(&RP_ISR_Interrupt);
 
     /* Set the priority. */
-    SPI_ISR_SetPriority((uint8)SPI_ISR_INTC_PRIOR_NUMBER);
+    RP_ISR_SetPriority((uint8)RP_ISR_INTC_PRIOR_NUMBER);
 
     /* Enable it. */
-    SPI_ISR_Enable();
+    RP_ISR_Enable();
 }
 
 
 /*******************************************************************************
-* Function Name: SPI_ISR_StartEx
+* Function Name: RP_ISR_StartEx
 ********************************************************************************
 *
 * Summary:
@@ -100,24 +100,24 @@ void SPI_ISR_Start(void)
 *   None
 *
 *******************************************************************************/
-void SPI_ISR_StartEx(cyisraddress address)
+void RP_ISR_StartEx(cyisraddress address)
 {
     /* For all we know the interrupt is active. */
-    SPI_ISR_Disable();
+    RP_ISR_Disable();
 
-    /* Set the ISR to point to the SPI_ISR Interrupt. */
-    SPI_ISR_SetVector(address);
+    /* Set the ISR to point to the RP_ISR Interrupt. */
+    RP_ISR_SetVector(address);
 
     /* Set the priority. */
-    SPI_ISR_SetPriority((uint8)SPI_ISR_INTC_PRIOR_NUMBER);
+    RP_ISR_SetPriority((uint8)RP_ISR_INTC_PRIOR_NUMBER);
 
     /* Enable it. */
-    SPI_ISR_Enable();
+    RP_ISR_Enable();
 }
 
 
 /*******************************************************************************
-* Function Name: SPI_ISR_Stop
+* Function Name: RP_ISR_Stop
 ********************************************************************************
 *
 * Summary:
@@ -130,22 +130,22 @@ void SPI_ISR_StartEx(cyisraddress address)
 *   None
 *
 *******************************************************************************/
-void SPI_ISR_Stop(void)
+void RP_ISR_Stop(void)
 {
     /* Disable this interrupt. */
-    SPI_ISR_Disable();
+    RP_ISR_Disable();
 
     /* Set the ISR to point to the passive one. */
-    SPI_ISR_SetVector(&IntDefaultHandler);
+    RP_ISR_SetVector(&IntDefaultHandler);
 }
 
 
 /*******************************************************************************
-* Function Name: SPI_ISR_Interrupt
+* Function Name: RP_ISR_Interrupt
 ********************************************************************************
 *
 * Summary:
-*   The default Interrupt Service Routine for SPI_ISR.
+*   The default Interrupt Service Routine for RP_ISR.
 *
 *   Add custom code between the coments to keep the next version of this file
 *   from over writting your code.
@@ -156,23 +156,23 @@ void SPI_ISR_Stop(void)
 *   None
 *
 *******************************************************************************/
-CY_ISR(SPI_ISR_Interrupt)
+CY_ISR(RP_ISR_Interrupt)
 {
     /*  Place your Interrupt code here. */
-    /* `#START SPI_ISR_Interrupt` */
+    /* `#START RP_ISR_Interrupt` */
 
     /* `#END` */
 }
 
 
 /*******************************************************************************
-* Function Name: SPI_ISR_SetVector
+* Function Name: RP_ISR_SetVector
 ********************************************************************************
 *
 * Summary:
-*   Change the ISR vector for the Interrupt. Note calling SPI_ISR_Start
+*   Change the ISR vector for the Interrupt. Note calling RP_ISR_Start
 *   will override any effect this method would have had. To set the vector 
-*   before the component has been started use SPI_ISR_StartEx instead.
+*   before the component has been started use RP_ISR_StartEx instead.
 * 
 *   When defining ISR functions, the CY_ISR and CY_ISR_PROTO macros should be 
 *   used to provide consistent definition across compilers:
@@ -192,18 +192,18 @@ CY_ISR(SPI_ISR_Interrupt)
 *   None
 *
 *******************************************************************************/
-void SPI_ISR_SetVector(cyisraddress address)
+void RP_ISR_SetVector(cyisraddress address)
 {
     cyisraddress * ramVectorTable;
 
     ramVectorTable = (cyisraddress *) *CYINT_VECT_TABLE;
 
-    ramVectorTable[CYINT_IRQ_BASE + (uint32)SPI_ISR__INTC_NUMBER] = address;
+    ramVectorTable[CYINT_IRQ_BASE + (uint32)RP_ISR__INTC_NUMBER] = address;
 }
 
 
 /*******************************************************************************
-* Function Name: SPI_ISR_GetVector
+* Function Name: RP_ISR_GetVector
 ********************************************************************************
 *
 * Summary:
@@ -216,26 +216,26 @@ void SPI_ISR_SetVector(cyisraddress address)
 *   Address of the ISR in the interrupt vector table.
 *
 *******************************************************************************/
-cyisraddress SPI_ISR_GetVector(void)
+cyisraddress RP_ISR_GetVector(void)
 {
     cyisraddress * ramVectorTable;
 
     ramVectorTable = (cyisraddress *) *CYINT_VECT_TABLE;
 
-    return ramVectorTable[CYINT_IRQ_BASE + (uint32)SPI_ISR__INTC_NUMBER];
+    return ramVectorTable[CYINT_IRQ_BASE + (uint32)RP_ISR__INTC_NUMBER];
 }
 
 
 /*******************************************************************************
-* Function Name: SPI_ISR_SetPriority
+* Function Name: RP_ISR_SetPriority
 ********************************************************************************
 *
 * Summary:
 *   Sets the Priority of the Interrupt. 
 *
-*   Note calling SPI_ISR_Start or SPI_ISR_StartEx will 
+*   Note calling RP_ISR_Start or RP_ISR_StartEx will 
 *   override any effect this API would have had. This API should only be called
-*   after SPI_ISR_Start or SPI_ISR_StartEx has been called. 
+*   after RP_ISR_Start or RP_ISR_StartEx has been called. 
 *   To set the initial priority for the component, use the Design-Wide Resources
 *   Interrupt Editor.
 *
@@ -250,14 +250,14 @@ cyisraddress SPI_ISR_GetVector(void)
 *   None
 *
 *******************************************************************************/
-void SPI_ISR_SetPriority(uint8 priority)
+void RP_ISR_SetPriority(uint8 priority)
 {
-    *SPI_ISR_INTC_PRIOR = priority << 5;
+    *RP_ISR_INTC_PRIOR = priority << 5;
 }
 
 
 /*******************************************************************************
-* Function Name: SPI_ISR_GetPriority
+* Function Name: RP_ISR_GetPriority
 ********************************************************************************
 *
 * Summary:
@@ -272,19 +272,19 @@ void SPI_ISR_SetPriority(uint8 priority)
 *    PSoC 4: Priority is from 0 to 3.
 *
 *******************************************************************************/
-uint8 SPI_ISR_GetPriority(void)
+uint8 RP_ISR_GetPriority(void)
 {
     uint8 priority;
 
 
-    priority = *SPI_ISR_INTC_PRIOR >> 5;
+    priority = *RP_ISR_INTC_PRIOR >> 5;
 
     return priority;
 }
 
 
 /*******************************************************************************
-* Function Name: SPI_ISR_Enable
+* Function Name: RP_ISR_Enable
 ********************************************************************************
 *
 * Summary:
@@ -299,15 +299,15 @@ uint8 SPI_ISR_GetPriority(void)
 *   None
 *
 *******************************************************************************/
-void SPI_ISR_Enable(void)
+void RP_ISR_Enable(void)
 {
     /* Enable the general interrupt. */
-    *SPI_ISR_INTC_SET_EN = SPI_ISR__INTC_MASK;
+    *RP_ISR_INTC_SET_EN = RP_ISR__INTC_MASK;
 }
 
 
 /*******************************************************************************
-* Function Name: SPI_ISR_GetState
+* Function Name: RP_ISR_GetState
 ********************************************************************************
 *
 * Summary:
@@ -320,15 +320,15 @@ void SPI_ISR_Enable(void)
 *   1 if enabled, 0 if disabled.
 *
 *******************************************************************************/
-uint8 SPI_ISR_GetState(void)
+uint8 RP_ISR_GetState(void)
 {
     /* Get the state of the general interrupt. */
-    return ((*SPI_ISR_INTC_SET_EN & (uint32)SPI_ISR__INTC_MASK) != 0u) ? 1u:0u;
+    return ((*RP_ISR_INTC_SET_EN & (uint32)RP_ISR__INTC_MASK) != 0u) ? 1u:0u;
 }
 
 
 /*******************************************************************************
-* Function Name: SPI_ISR_Disable
+* Function Name: RP_ISR_Disable
 ********************************************************************************
 *
 * Summary:
@@ -341,15 +341,15 @@ uint8 SPI_ISR_GetState(void)
 *   None
 *
 *******************************************************************************/
-void SPI_ISR_Disable(void)
+void RP_ISR_Disable(void)
 {
     /* Disable the general interrupt. */
-    *SPI_ISR_INTC_CLR_EN = SPI_ISR__INTC_MASK;
+    *RP_ISR_INTC_CLR_EN = RP_ISR__INTC_MASK;
 }
 
 
 /*******************************************************************************
-* Function Name: SPI_ISR_SetPending
+* Function Name: RP_ISR_SetPending
 ********************************************************************************
 *
 * Summary:
@@ -368,14 +368,14 @@ void SPI_ISR_Disable(void)
 *   interrupts).
 *
 *******************************************************************************/
-void SPI_ISR_SetPending(void)
+void RP_ISR_SetPending(void)
 {
-    *SPI_ISR_INTC_SET_PD = SPI_ISR__INTC_MASK;
+    *RP_ISR_INTC_SET_PD = RP_ISR__INTC_MASK;
 }
 
 
 /*******************************************************************************
-* Function Name: SPI_ISR_ClearPending
+* Function Name: RP_ISR_ClearPending
 ********************************************************************************
 *
 * Summary:
@@ -393,9 +393,9 @@ void SPI_ISR_SetPending(void)
 *   None
 *
 *******************************************************************************/
-void SPI_ISR_ClearPending(void)
+void RP_ISR_ClearPending(void)
 {
-    *SPI_ISR_INTC_CLR_PD = SPI_ISR__INTC_MASK;
+    *RP_ISR_INTC_CLR_PD = RP_ISR__INTC_MASK;
 }
 
 #endif /* End check for removal by optimization */

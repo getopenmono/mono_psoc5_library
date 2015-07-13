@@ -1,5 +1,5 @@
 /*******************************************************************************
-* File Name: SPI_INTR.c  
+* File Name: RP_INTR.c  
 * Version 2.10
 *
 * Description:
@@ -15,15 +15,15 @@
 *******************************************************************************/
 
 #include "cytypes.h"
-#include "SPI_INTR.h"
+#include "RP_INTR.h"
 
 /* APIs are not generated for P15[7:6] on PSoC 5 */
 #if !(CY_PSOC5A &&\
-	 SPI_INTR__PORT == 15 && ((SPI_INTR__MASK & 0xC0) != 0))
+	 RP_INTR__PORT == 15 && ((RP_INTR__MASK & 0xC0) != 0))
 
 
 /*******************************************************************************
-* Function Name: SPI_INTR_Write
+* Function Name: RP_INTR_Write
 ********************************************************************************
 *
 * Summary:
@@ -36,15 +36,15 @@
 *  None
 *  
 *******************************************************************************/
-void SPI_INTR_Write(uint8 value) 
+void RP_INTR_Write(uint8 value) 
 {
-    uint8 staticBits = (SPI_INTR_DR & (uint8)(~SPI_INTR_MASK));
-    SPI_INTR_DR = staticBits | ((uint8)(value << SPI_INTR_SHIFT) & SPI_INTR_MASK);
+    uint8 staticBits = (RP_INTR_DR & (uint8)(~RP_INTR_MASK));
+    RP_INTR_DR = staticBits | ((uint8)(value << RP_INTR_SHIFT) & RP_INTR_MASK);
 }
 
 
 /*******************************************************************************
-* Function Name: SPI_INTR_SetDriveMode
+* Function Name: RP_INTR_SetDriveMode
 ********************************************************************************
 *
 * Summary:
@@ -53,27 +53,27 @@ void SPI_INTR_Write(uint8 value)
 * Parameters:  
 *  mode:  Change the pins to one of the following drive modes.
 *
-*  SPI_INTR_DM_STRONG     Strong Drive 
-*  SPI_INTR_DM_OD_HI      Open Drain, Drives High 
-*  SPI_INTR_DM_OD_LO      Open Drain, Drives Low 
-*  SPI_INTR_DM_RES_UP     Resistive Pull Up 
-*  SPI_INTR_DM_RES_DWN    Resistive Pull Down 
-*  SPI_INTR_DM_RES_UPDWN  Resistive Pull Up/Down 
-*  SPI_INTR_DM_DIG_HIZ    High Impedance Digital 
-*  SPI_INTR_DM_ALG_HIZ    High Impedance Analog 
+*  RP_INTR_DM_STRONG     Strong Drive 
+*  RP_INTR_DM_OD_HI      Open Drain, Drives High 
+*  RP_INTR_DM_OD_LO      Open Drain, Drives Low 
+*  RP_INTR_DM_RES_UP     Resistive Pull Up 
+*  RP_INTR_DM_RES_DWN    Resistive Pull Down 
+*  RP_INTR_DM_RES_UPDWN  Resistive Pull Up/Down 
+*  RP_INTR_DM_DIG_HIZ    High Impedance Digital 
+*  RP_INTR_DM_ALG_HIZ    High Impedance Analog 
 *
 * Return: 
 *  None
 *
 *******************************************************************************/
-void SPI_INTR_SetDriveMode(uint8 mode) 
+void RP_INTR_SetDriveMode(uint8 mode) 
 {
-	CyPins_SetPinDriveMode(SPI_INTR_0, mode);
+	CyPins_SetPinDriveMode(RP_INTR_0, mode);
 }
 
 
 /*******************************************************************************
-* Function Name: SPI_INTR_Read
+* Function Name: RP_INTR_Read
 ********************************************************************************
 *
 * Summary:
@@ -87,17 +87,17 @@ void SPI_INTR_SetDriveMode(uint8 mode)
 *  Returns the current value of the Digital Port as a right justified number
 *  
 * Note:
-*  Macro SPI_INTR_ReadPS calls this function. 
+*  Macro RP_INTR_ReadPS calls this function. 
 *  
 *******************************************************************************/
-uint8 SPI_INTR_Read(void) 
+uint8 RP_INTR_Read(void) 
 {
-    return (SPI_INTR_PS & SPI_INTR_MASK) >> SPI_INTR_SHIFT;
+    return (RP_INTR_PS & RP_INTR_MASK) >> RP_INTR_SHIFT;
 }
 
 
 /*******************************************************************************
-* Function Name: SPI_INTR_ReadDataReg
+* Function Name: RP_INTR_ReadDataReg
 ********************************************************************************
 *
 * Summary:
@@ -110,17 +110,17 @@ uint8 SPI_INTR_Read(void)
 *  Returns the current value assigned to the Digital Port's data output register
 *  
 *******************************************************************************/
-uint8 SPI_INTR_ReadDataReg(void) 
+uint8 RP_INTR_ReadDataReg(void) 
 {
-    return (SPI_INTR_DR & SPI_INTR_MASK) >> SPI_INTR_SHIFT;
+    return (RP_INTR_DR & RP_INTR_MASK) >> RP_INTR_SHIFT;
 }
 
 
 /* If Interrupts Are Enabled for this Pins component */ 
-#if defined(SPI_INTR_INTSTAT) 
+#if defined(RP_INTR_INTSTAT) 
 
     /*******************************************************************************
-    * Function Name: SPI_INTR_ClearInterrupt
+    * Function Name: RP_INTR_ClearInterrupt
     ********************************************************************************
     * Summary:
     *  Clears any active interrupts attached to port and returns the value of the 
@@ -133,9 +133,9 @@ uint8 SPI_INTR_ReadDataReg(void)
     *  Returns the value of the interrupt status register
     *  
     *******************************************************************************/
-    uint8 SPI_INTR_ClearInterrupt(void) 
+    uint8 RP_INTR_ClearInterrupt(void) 
     {
-        return (SPI_INTR_INTSTAT & SPI_INTR_MASK) >> SPI_INTR_SHIFT;
+        return (RP_INTR_INTSTAT & RP_INTR_MASK) >> RP_INTR_SHIFT;
     }
 
 #endif /* If Interrupts Are Enabled for this Pins component */ 
