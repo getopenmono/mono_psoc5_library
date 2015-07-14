@@ -10,9 +10,21 @@ CYPRESS_DIR=Generated_Source/PSoC5
 LINKER_SCRIPT=${CYPRESS_DIR}/cm3gcc.ld
 BUILD_DIR=build
 COMP_LIB="lib/CyComponentLibrary.a"
+MONO_CY_LIB=build/monoCyLib.a
+MBED_PATH=../mbedcomp
+MONO_FW_PATH=../mono_framework
 
 OBJECTS =	$(patsubst %.c,%.o,$(wildcard *.c)) $(patsubst %.cpp,%.o,$(wildcard *.cpp))
-		
+
+MBED_OBJECTS =	$(patsubst %.c,%.o,$(wildcard $(MBED_PATH)/*.c)) \
+				$(patsubst %.cpp,%.o,$(wildcard $(MBED_PATH)/*.cpp))
+
+MONO_OBJECTS = 	$(patsubst %.cpp,%.o,$(wildcard $(MONO_FW_PATH)/*.cpp)) \
+				$(patsubst %.cpp,%.o,$(wildcard $(MONO_FW_PATH)/display/*.cpp)) \
+				$(patsubst %.cpp,%.o,$(wildcard $(MONO_FW_PATH)/display/ui/*.cpp)) \
+				$(patsubst %.cpp,%.o,$(wildcard $(MONO_FW_PATH)/display/hx8340/*.cpp)) \
+				$(patsubst %.cpp,%.o,$(wildcard $(MONO_FW_PATH)/wireless/*.cpp)) 
+
 SYS_OBJECTS = 	$(patsubst %.c,%.o,$(wildcard Generated_Source/PSoC5/*.c)) \
 				$(patsubst %.s,%.o,$(wildcard Generated_Source/PSoC5/*Gnu.s))
 
@@ -28,7 +40,14 @@ OBJDUMP=$(ARCH)objdump
 COPY=cp
 MKDIR=mkdir
 ELFTOOL='C:\Program Files (x86)\Cypress\PSoC Creator\3.1\PSoC Creator\bin\cyelftool.exe'
-INCS = -I . -I ${CYPRESS_DIR}
+INCS =	-I . \
+	 	-I ${CYPRESS_DIR} \
+		-I $(MBED_PATH) \
+		-I $(MONO_FW_PATH) \
+		-I $(MONO_FW_PATH)/display \
+		-I $(MONO_FW_PATH)/display/ui \
+		-I $(MONO_FW_PATH)/display/hx8340 \
+		-I $(MONO_FW_PATH)/wireless
 CDEFS=
 ASDEFS=
 AS_FLAGS = -c -g -Wall -mcpu=cortex-m3 -mthumb -mthumb-interwork -march=armv7-m
@@ -63,9 +82,9 @@ $(BUILD_DIR):
 	@echo "Compiling C++: $(notdir $<)"
 	@$(CXX) $(CC_FLAGS) $(ONLY_CPP_FLAGS) $(CDEFS) $(INCS) -o $(BUILD_DIR)/$(notdir $@) $<
 
-$(TARGET).elf: $(OBJECTS)
+$(TARGET).elf: $(OBJECTS) $(MBED_OBJECTS) $(MONO_OBJECTS)
 	@echo "Linking $(notdir $@)"
-	@$(LD) -Wl,--start-group -o $@ $(addprefix $(BUILD_DIR)/, $(notdir $^)) monoCyLib.a -mthumb -march=armv7-m -mfix-cortex-m3-ldrd "-Wl,-Map,mono_project.map" -T $(LINKER_SCRIPT) -g -specs=nano.specs "-u\ _printf_float" $(LD_SYS_LIBS) -Wl,--gc-sections -Wl,--end-group
+	@$(LD) -Wl,--start-group -o $@ $(addprefix $(BUILD_DIR)/, $(notdir $^)) $(MONO_CY_LIB) -mthumb -march=armv7-m -mfix-cortex-m3-ldrd "-Wl,-Map,mono_project.map" -T $(LINKER_SCRIPT) -g -specs=nano.specs "-u\ _printf_float" $(LD_SYS_LIBS) -Wl,--gc-sections -Wl,--end-group
 
 $(TARGET).hex: $(TARGET).elf
 	$(ELFTOOL) -C $^ --flash_size $(FLASH_SIZE) --flash_row_size $(FLASH_ROW_SIZE)
@@ -89,6 +108,12 @@ systemFiles:
 	
 appFiles:
 	@echo $(OBJECTS)
+	
+mbedFiles:
+	@echo $(MBED_OBJECTS)
+	
+monoFiles:
+	@echo $(MONO_OBJECTS)
 
 clean:
 	$(RM) $(addprefix $(BUILD_DIR)/, $(notdir $(OBJECTS))) $(addprefix $(BUILD_DIR)/, $(notdir $(SYS_OBJECTS))) $(TARGET).elf $(TARGET).bin include/* lib/monoCyLib.a
