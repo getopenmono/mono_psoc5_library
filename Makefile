@@ -32,13 +32,15 @@ MONO_OBJECTS =	$(patsubst %.c,%.o,$(wildcard $(MONO_FRAMEWORK_PATH)/*.c)) \
 				$(patsubst %.c,%.o,$(wildcard $(MONO_FRAMEWORK_PATH)/display/hx8340/*.c)) \
 				$(patsubst %.cpp,%.o,$(wildcard $(MONO_FRAMEWORK_PATH)/display/hx8340/*.cpp)) \
 				$(patsubst %.c,%.o,$(wildcard $(MONO_FRAMEWORK_PATH)/wireless/*.c)) \
-				$(patsubst %.cpp,%.o,$(wildcard $(MONO_FRAMEWORK_PATH)/wireless/*.cpp))
+				$(patsubst %.cpp,%.o,$(wildcard $(MONO_FRAMEWORK_PATH)/wireless/*.cpp)) \
+				$(patsubst %.cpp,%.o,$(wildcard $(MONO_FRAMEWORK_PATH)/media/*.cpp))
 
 MONO_INCLUDES =	$(MONO_FRAMEWORK_PATH) \
 				$(MONO_FRAMEWORK_PATH)/display \
 				$(MONO_FRAMEWORK_PATH)/display/hx8340 \
 				$(MONO_FRAMEWORK_PATH)/display/ui \
-				$(MONO_FRAMEWORK_PATH)/wireless
+				$(MONO_FRAMEWORK_PATH)/wireless \
+				$(MONO_FRAMEWORK_PATH)/media
 
 SYS_OBJECTS = 	$(patsubst %.c,%.o,$(wildcard $(CYPRESS_DIR)/*.c)) \
 				$(patsubst %.s,%.o,$(wildcard $(CYPRESS_DIR)/*Gnu.s))
