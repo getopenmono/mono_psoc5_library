@@ -1,5 +1,5 @@
 /*******************************************************************************
-* File Name: TFT_Clock_1.c
+* File Name: SPI1_IntClock.c
 * Version 2.20
 *
 *  Description:
@@ -15,7 +15,7 @@
 *******************************************************************************/
 
 #include <cydevice_trm.h>
-#include "TFT_Clock_1.h"
+#include "SPI1_IntClock.h"
 
 /* Clock Distribution registers. */
 #define CLK_DIST_LD              (* (reg8 *) CYREG_CLKDIST_LD)
@@ -28,7 +28,7 @@
 
 
 /*******************************************************************************
-* Function Name: TFT_Clock_1_Start
+* Function Name: SPI1_IntClock_Start
 ********************************************************************************
 *
 * Summary:
@@ -42,16 +42,16 @@
 *  None
 *
 *******************************************************************************/
-void TFT_Clock_1_Start(void) 
+void SPI1_IntClock_Start(void) 
 {
     /* Set the bit to enable the clock. */
-    TFT_Clock_1_CLKEN |= TFT_Clock_1_CLKEN_MASK;
-	TFT_Clock_1_CLKSTBY |= TFT_Clock_1_CLKSTBY_MASK;
+    SPI1_IntClock_CLKEN |= SPI1_IntClock_CLKEN_MASK;
+	SPI1_IntClock_CLKSTBY |= SPI1_IntClock_CLKSTBY_MASK;
 }
 
 
 /*******************************************************************************
-* Function Name: TFT_Clock_1_Stop
+* Function Name: SPI1_IntClock_Stop
 ********************************************************************************
 *
 * Summary:
@@ -68,11 +68,11 @@ void TFT_Clock_1_Start(void)
 *  None
 *
 *******************************************************************************/
-void TFT_Clock_1_Stop(void) 
+void SPI1_IntClock_Stop(void) 
 {
     /* Clear the bit to disable the clock. */
-    TFT_Clock_1_CLKEN &= (uint8)(~TFT_Clock_1_CLKEN_MASK);
-	TFT_Clock_1_CLKSTBY &= (uint8)(~TFT_Clock_1_CLKSTBY_MASK);
+    SPI1_IntClock_CLKEN &= (uint8)(~SPI1_IntClock_CLKEN_MASK);
+	SPI1_IntClock_CLKSTBY &= (uint8)(~SPI1_IntClock_CLKSTBY_MASK);
 }
 
 
@@ -80,7 +80,7 @@ void TFT_Clock_1_Stop(void)
 
 
 /*******************************************************************************
-* Function Name: TFT_Clock_1_StopBlock
+* Function Name: SPI1_IntClock_StopBlock
 ********************************************************************************
 *
 * Summary:
@@ -97,9 +97,9 @@ void TFT_Clock_1_Stop(void)
 *  None
 *
 *******************************************************************************/
-void TFT_Clock_1_StopBlock(void) 
+void SPI1_IntClock_StopBlock(void) 
 {
-    if ((TFT_Clock_1_CLKEN & TFT_Clock_1_CLKEN_MASK) != 0u)
+    if ((SPI1_IntClock_CLKEN & SPI1_IntClock_CLKEN_MASK) != 0u)
     {
 #if HAS_CLKDIST_LD_DISABLE
         uint16 oldDivider;
@@ -107,18 +107,18 @@ void TFT_Clock_1_StopBlock(void)
         CLK_DIST_LD = 0u;
 
         /* Clear all the mask bits except ours. */
-#if defined(TFT_Clock_1__CFG3)
-        CLK_DIST_AMASK = TFT_Clock_1_CLKEN_MASK;
+#if defined(SPI1_IntClock__CFG3)
+        CLK_DIST_AMASK = SPI1_IntClock_CLKEN_MASK;
         CLK_DIST_DMASK = 0x00u;
 #else
-        CLK_DIST_DMASK = TFT_Clock_1_CLKEN_MASK;
+        CLK_DIST_DMASK = SPI1_IntClock_CLKEN_MASK;
         CLK_DIST_AMASK = 0x00u;
-#endif /* TFT_Clock_1__CFG3 */
+#endif /* SPI1_IntClock__CFG3 */
 
         /* Clear mask of bus clock. */
         CLK_DIST_BCFG2 &= (uint8)(~BCFG2_MASK);
 
-        oldDivider = CY_GET_REG16(TFT_Clock_1_DIV_PTR);
+        oldDivider = CY_GET_REG16(SPI1_IntClock_DIV_PTR);
         CY_SET_REG16(CYREG_CLKDIST_WRK0, oldDivider);
         CLK_DIST_LD = CYCLK_LD_DISABLE | CYCLK_LD_SYNC_EN | CYCLK_LD_LOAD;
 
@@ -127,13 +127,13 @@ void TFT_Clock_1_StopBlock(void)
 #endif /* HAS_CLKDIST_LD_DISABLE */
 
         /* Clear the bit to disable the clock. */
-        TFT_Clock_1_CLKEN &= (uint8)(~TFT_Clock_1_CLKEN_MASK);
-        TFT_Clock_1_CLKSTBY &= (uint8)(~TFT_Clock_1_CLKSTBY_MASK);
+        SPI1_IntClock_CLKEN &= (uint8)(~SPI1_IntClock_CLKEN_MASK);
+        SPI1_IntClock_CLKSTBY &= (uint8)(~SPI1_IntClock_CLKSTBY_MASK);
 
 #if HAS_CLKDIST_LD_DISABLE
         /* Clear the disable bit */
         CLK_DIST_LD = 0x00u;
-        CY_SET_REG16(TFT_Clock_1_DIV_PTR, oldDivider);
+        CY_SET_REG16(SPI1_IntClock_DIV_PTR, oldDivider);
 #endif /* HAS_CLKDIST_LD_DISABLE */
     }
 }
@@ -141,7 +141,7 @@ void TFT_Clock_1_StopBlock(void)
 
 
 /*******************************************************************************
-* Function Name: TFT_Clock_1_StandbyPower
+* Function Name: SPI1_IntClock_StandbyPower
 ********************************************************************************
 *
 * Summary:
@@ -154,21 +154,21 @@ void TFT_Clock_1_StopBlock(void)
 *  None
 *
 *******************************************************************************/
-void TFT_Clock_1_StandbyPower(uint8 state) 
+void SPI1_IntClock_StandbyPower(uint8 state) 
 {
     if(state == 0u)
     {
-        TFT_Clock_1_CLKSTBY &= (uint8)(~TFT_Clock_1_CLKSTBY_MASK);
+        SPI1_IntClock_CLKSTBY &= (uint8)(~SPI1_IntClock_CLKSTBY_MASK);
     }
     else
     {
-        TFT_Clock_1_CLKSTBY |= TFT_Clock_1_CLKSTBY_MASK;
+        SPI1_IntClock_CLKSTBY |= SPI1_IntClock_CLKSTBY_MASK;
     }
 }
 
 
 /*******************************************************************************
-* Function Name: TFT_Clock_1_SetDividerRegister
+* Function Name: SPI1_IntClock_SetDividerRegister
 ********************************************************************************
 *
 * Summary:
@@ -190,17 +190,17 @@ void TFT_Clock_1_StandbyPower(uint8 state)
 *  None
 *
 *******************************************************************************/
-void TFT_Clock_1_SetDividerRegister(uint16 clkDivider, uint8 restart)
+void SPI1_IntClock_SetDividerRegister(uint16 clkDivider, uint8 restart)
                                 
 {
     uint8 enabled;
 
-    uint8 currSrc = TFT_Clock_1_GetSourceRegister();
-    uint16 oldDivider = TFT_Clock_1_GetDividerRegister();
+    uint8 currSrc = SPI1_IntClock_GetSourceRegister();
+    uint16 oldDivider = SPI1_IntClock_GetDividerRegister();
 
     if (clkDivider != oldDivider)
     {
-        enabled = TFT_Clock_1_CLKEN & TFT_Clock_1_CLKEN_MASK;
+        enabled = SPI1_IntClock_CLKEN & SPI1_IntClock_CLKEN_MASK;
 
         if ((currSrc == (uint8)CYCLK_SRC_SEL_CLK_SYNC_D) && ((oldDivider == 0u) || (clkDivider == 0u)))
         {
@@ -210,15 +210,15 @@ void TFT_Clock_1_SetDividerRegister(uint16 clkDivider, uint8 restart)
                 /* Moving away from SSS, set the divider first so when SSS is cleared we    */
                 /* don't halt the clock.  Using the shadow load isn't required as the       */
                 /* divider is ignored while SSS is set.                                     */
-                CY_SET_REG16(TFT_Clock_1_DIV_PTR, clkDivider);
-                TFT_Clock_1_MOD_SRC &= (uint8)(~CYCLK_SSS);
+                CY_SET_REG16(SPI1_IntClock_DIV_PTR, clkDivider);
+                SPI1_IntClock_MOD_SRC &= (uint8)(~CYCLK_SSS);
             }
             else
             {
                 /* Moving to SSS, set SSS which then ignores the divider and we can set     */
                 /* it without bothering with the shadow load.                               */
-                TFT_Clock_1_MOD_SRC |= CYCLK_SSS;
-                CY_SET_REG16(TFT_Clock_1_DIV_PTR, clkDivider);
+                SPI1_IntClock_MOD_SRC |= CYCLK_SSS;
+                CY_SET_REG16(SPI1_IntClock_DIV_PTR, clkDivider);
             }
         }
         else
@@ -229,18 +229,18 @@ void TFT_Clock_1_SetDividerRegister(uint16 clkDivider, uint8 restart)
                 CLK_DIST_LD = 0x00u;
 
                 /* Clear all the mask bits except ours. */
-#if defined(TFT_Clock_1__CFG3)
-                CLK_DIST_AMASK = TFT_Clock_1_CLKEN_MASK;
+#if defined(SPI1_IntClock__CFG3)
+                CLK_DIST_AMASK = SPI1_IntClock_CLKEN_MASK;
                 CLK_DIST_DMASK = 0x00u;
 #else
-                CLK_DIST_DMASK = TFT_Clock_1_CLKEN_MASK;
+                CLK_DIST_DMASK = SPI1_IntClock_CLKEN_MASK;
                 CLK_DIST_AMASK = 0x00u;
-#endif /* TFT_Clock_1__CFG3 */
+#endif /* SPI1_IntClock__CFG3 */
                 /* Clear mask of bus clock. */
                 CLK_DIST_BCFG2 &= (uint8)(~BCFG2_MASK);
 
                 /* If clock is currently enabled, disable it if async or going from N-to-1*/
-                if (((TFT_Clock_1_MOD_SRC & CYCLK_SYNC) == 0u) || (clkDivider == 0u))
+                if (((SPI1_IntClock_MOD_SRC & CYCLK_SYNC) == 0u) || (clkDivider == 0u))
                 {
 #if HAS_CLKDIST_LD_DISABLE
                     CY_SET_REG16(CYREG_CLKDIST_WRK0, oldDivider);
@@ -250,7 +250,7 @@ void TFT_Clock_1_SetDividerRegister(uint16 clkDivider, uint8 restart)
                     while ((CLK_DIST_LD & CYCLK_LD_LOAD) != 0u) { }
 #endif /* HAS_CLKDIST_LD_DISABLE */
 
-                    TFT_Clock_1_CLKEN &= (uint8)(~TFT_Clock_1_CLKEN_MASK);
+                    SPI1_IntClock_CLKEN &= (uint8)(~SPI1_IntClock_CLKEN_MASK);
 
 #if HAS_CLKDIST_LD_DISABLE
                     /* Clear the disable bit */
@@ -260,7 +260,7 @@ void TFT_Clock_1_SetDividerRegister(uint16 clkDivider, uint8 restart)
             }
 
             /* Load divide value. */
-            if ((TFT_Clock_1_CLKEN & TFT_Clock_1_CLKEN_MASK) != 0u)
+            if ((SPI1_IntClock_CLKEN & SPI1_IntClock_CLKEN_MASK) != 0u)
             {
                 /* If the clock is still enabled, use the shadow registers */
                 CY_SET_REG16(CYREG_CLKDIST_WRK0, clkDivider);
@@ -271,8 +271,8 @@ void TFT_Clock_1_SetDividerRegister(uint16 clkDivider, uint8 restart)
             else
             {
                 /* If the clock is disabled, set the divider directly */
-                CY_SET_REG16(TFT_Clock_1_DIV_PTR, clkDivider);
-				TFT_Clock_1_CLKEN |= enabled;
+                CY_SET_REG16(SPI1_IntClock_DIV_PTR, clkDivider);
+				SPI1_IntClock_CLKEN |= enabled;
             }
         }
     }
@@ -280,7 +280,7 @@ void TFT_Clock_1_SetDividerRegister(uint16 clkDivider, uint8 restart)
 
 
 /*******************************************************************************
-* Function Name: TFT_Clock_1_GetDividerRegister
+* Function Name: SPI1_IntClock_GetDividerRegister
 ********************************************************************************
 *
 * Summary:
@@ -294,14 +294,14 @@ void TFT_Clock_1_SetDividerRegister(uint16 clkDivider, uint8 restart)
 *  divide by 2, the return value will be 1.
 *
 *******************************************************************************/
-uint16 TFT_Clock_1_GetDividerRegister(void) 
+uint16 SPI1_IntClock_GetDividerRegister(void) 
 {
-    return CY_GET_REG16(TFT_Clock_1_DIV_PTR);
+    return CY_GET_REG16(SPI1_IntClock_DIV_PTR);
 }
 
 
 /*******************************************************************************
-* Function Name: TFT_Clock_1_SetModeRegister
+* Function Name: SPI1_IntClock_SetModeRegister
 ********************************************************************************
 *
 * Summary:
@@ -329,14 +329,14 @@ uint16 TFT_Clock_1_GetDividerRegister(void)
 *  None
 *
 *******************************************************************************/
-void TFT_Clock_1_SetModeRegister(uint8 modeBitMask) 
+void SPI1_IntClock_SetModeRegister(uint8 modeBitMask) 
 {
-    TFT_Clock_1_MOD_SRC |= modeBitMask & (uint8)TFT_Clock_1_MODE_MASK;
+    SPI1_IntClock_MOD_SRC |= modeBitMask & (uint8)SPI1_IntClock_MODE_MASK;
 }
 
 
 /*******************************************************************************
-* Function Name: TFT_Clock_1_ClearModeRegister
+* Function Name: SPI1_IntClock_ClearModeRegister
 ********************************************************************************
 *
 * Summary:
@@ -364,14 +364,14 @@ void TFT_Clock_1_SetModeRegister(uint8 modeBitMask)
 *  None
 *
 *******************************************************************************/
-void TFT_Clock_1_ClearModeRegister(uint8 modeBitMask) 
+void SPI1_IntClock_ClearModeRegister(uint8 modeBitMask) 
 {
-    TFT_Clock_1_MOD_SRC &= (uint8)(~modeBitMask) | (uint8)(~(uint8)(TFT_Clock_1_MODE_MASK));
+    SPI1_IntClock_MOD_SRC &= (uint8)(~modeBitMask) | (uint8)(~(uint8)(SPI1_IntClock_MODE_MASK));
 }
 
 
 /*******************************************************************************
-* Function Name: TFT_Clock_1_GetModeRegister
+* Function Name: SPI1_IntClock_GetModeRegister
 ********************************************************************************
 *
 * Summary:
@@ -385,14 +385,14 @@ void TFT_Clock_1_ClearModeRegister(uint8 modeBitMask)
 *  ClearModeRegister descriptions for details about the mode bits.
 *
 *******************************************************************************/
-uint8 TFT_Clock_1_GetModeRegister(void) 
+uint8 SPI1_IntClock_GetModeRegister(void) 
 {
-    return TFT_Clock_1_MOD_SRC & (uint8)(TFT_Clock_1_MODE_MASK);
+    return SPI1_IntClock_MOD_SRC & (uint8)(SPI1_IntClock_MODE_MASK);
 }
 
 
 /*******************************************************************************
-* Function Name: TFT_Clock_1_SetSourceRegister
+* Function Name: SPI1_IntClock_SetSourceRegister
 ********************************************************************************
 *
 * Summary:
@@ -416,39 +416,39 @@ uint8 TFT_Clock_1_GetModeRegister(void)
 *  None
 *
 *******************************************************************************/
-void TFT_Clock_1_SetSourceRegister(uint8 clkSource) 
+void SPI1_IntClock_SetSourceRegister(uint8 clkSource) 
 {
-    uint16 currDiv = TFT_Clock_1_GetDividerRegister();
-    uint8 oldSrc = TFT_Clock_1_GetSourceRegister();
+    uint16 currDiv = SPI1_IntClock_GetDividerRegister();
+    uint8 oldSrc = SPI1_IntClock_GetSourceRegister();
 
     if (((oldSrc != ((uint8)CYCLK_SRC_SEL_CLK_SYNC_D)) && 
         (clkSource == ((uint8)CYCLK_SRC_SEL_CLK_SYNC_D))) && (currDiv == 0u))
     {
         /* Switching to Master and divider is 1, set SSS, which will output master, */
         /* then set the source so we are consistent.                                */
-        TFT_Clock_1_MOD_SRC |= CYCLK_SSS;
-        TFT_Clock_1_MOD_SRC =
-            (TFT_Clock_1_MOD_SRC & (uint8)(~TFT_Clock_1_SRC_SEL_MSK)) | clkSource;
+        SPI1_IntClock_MOD_SRC |= CYCLK_SSS;
+        SPI1_IntClock_MOD_SRC =
+            (SPI1_IntClock_MOD_SRC & (uint8)(~SPI1_IntClock_SRC_SEL_MSK)) | clkSource;
     }
     else if (((oldSrc == ((uint8)CYCLK_SRC_SEL_CLK_SYNC_D)) && 
             (clkSource != ((uint8)CYCLK_SRC_SEL_CLK_SYNC_D))) && (currDiv == 0u))
     {
         /* Switching from Master to not and divider is 1, set source, so we don't   */
         /* lock when we clear SSS.                                                  */
-        TFT_Clock_1_MOD_SRC =
-            (TFT_Clock_1_MOD_SRC & (uint8)(~TFT_Clock_1_SRC_SEL_MSK)) | clkSource;
-        TFT_Clock_1_MOD_SRC &= (uint8)(~CYCLK_SSS);
+        SPI1_IntClock_MOD_SRC =
+            (SPI1_IntClock_MOD_SRC & (uint8)(~SPI1_IntClock_SRC_SEL_MSK)) | clkSource;
+        SPI1_IntClock_MOD_SRC &= (uint8)(~CYCLK_SSS);
     }
     else
     {
-        TFT_Clock_1_MOD_SRC =
-            (TFT_Clock_1_MOD_SRC & (uint8)(~TFT_Clock_1_SRC_SEL_MSK)) | clkSource;
+        SPI1_IntClock_MOD_SRC =
+            (SPI1_IntClock_MOD_SRC & (uint8)(~SPI1_IntClock_SRC_SEL_MSK)) | clkSource;
     }
 }
 
 
 /*******************************************************************************
-* Function Name: TFT_Clock_1_GetSourceRegister
+* Function Name: SPI1_IntClock_GetSourceRegister
 ********************************************************************************
 *
 * Summary:
@@ -461,17 +461,17 @@ void TFT_Clock_1_SetSourceRegister(uint8 clkSource)
 *  The input source of the clock. See SetSourceRegister for details.
 *
 *******************************************************************************/
-uint8 TFT_Clock_1_GetSourceRegister(void) 
+uint8 SPI1_IntClock_GetSourceRegister(void) 
 {
-    return TFT_Clock_1_MOD_SRC & TFT_Clock_1_SRC_SEL_MSK;
+    return SPI1_IntClock_MOD_SRC & SPI1_IntClock_SRC_SEL_MSK;
 }
 
 
-#if defined(TFT_Clock_1__CFG3)
+#if defined(SPI1_IntClock__CFG3)
 
 
 /*******************************************************************************
-* Function Name: TFT_Clock_1_SetPhaseRegister
+* Function Name: SPI1_IntClock_SetPhaseRegister
 ********************************************************************************
 *
 * Summary:
@@ -489,14 +489,14 @@ uint8 TFT_Clock_1_GetSourceRegister(void)
 *  None
 *
 *******************************************************************************/
-void TFT_Clock_1_SetPhaseRegister(uint8 clkPhase) 
+void SPI1_IntClock_SetPhaseRegister(uint8 clkPhase) 
 {
-    TFT_Clock_1_PHASE = clkPhase & TFT_Clock_1_PHASE_MASK;
+    SPI1_IntClock_PHASE = clkPhase & SPI1_IntClock_PHASE_MASK;
 }
 
 
 /*******************************************************************************
-* Function Name: TFT_Clock_1_GetPhase
+* Function Name: SPI1_IntClock_GetPhase
 ********************************************************************************
 *
 * Summary:
@@ -510,12 +510,12 @@ void TFT_Clock_1_SetPhaseRegister(uint8 clkPhase)
 *  Phase of the analog clock. See SetPhaseRegister for details.
 *
 *******************************************************************************/
-uint8 TFT_Clock_1_GetPhaseRegister(void) 
+uint8 SPI1_IntClock_GetPhaseRegister(void) 
 {
-    return TFT_Clock_1_PHASE & TFT_Clock_1_PHASE_MASK;
+    return SPI1_IntClock_PHASE & SPI1_IntClock_PHASE_MASK;
 }
 
-#endif /* TFT_Clock_1__CFG3 */
+#endif /* SPI1_IntClock__CFG3 */
 
 
 /* [] END OF FILE */

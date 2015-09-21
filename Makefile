@@ -18,10 +18,10 @@ MONO_LIB=lib/monoCyLib.a
 OBJECTS =		$(patsubst %.c,%.o,$(wildcard *.c)) \
 				$(patsubst %.cpp,%.o,$(wildcard *.cpp))
 
-MBED_OBJECTS =	$(patsubst %.c,%.o,$(wildcard $(MBED_PATH)/*.cpp)) \
-				$(patsubst %.cpp,%.o,$(wildcard $(MBED_PATH)/common/*.c)) \
+MBED_OBJECTS =	$(patsubst %.cpp,%.o,$(wildcard $(MBED_PATH)/*.cpp)) \
+				$(patsubst %.c,%.o,$(wildcard $(MBED_PATH)/common/*.c)) \
 				$(patsubst %.cpp,%.o,$(wildcard $(MBED_PATH)/common/*.cpp)) \
-				$(patsubst %.cpp,%.o,$(wildcard $(MBED_PATH)/target_cypress/*.c))
+				$(patsubst %.c,%.o,$(wildcard $(MBED_PATH)/target_cypress/*.c))
 				
 MBED_INCLUDES =	$(MBED_PATH) \
 				$(MBED_PATH)/api \
@@ -34,15 +34,15 @@ MONO_OBJECTS =	$(patsubst %.c,%.o,$(wildcard $(MONO_FRAMEWORK_PATH)/*.c)) \
 				$(patsubst %.cpp,%.o,$(wildcard $(MONO_FRAMEWORK_PATH)/display/*.cpp)) \
 				$(patsubst %.c,%.o,$(wildcard $(MONO_FRAMEWORK_PATH)/display/ui/*.c)) \
 				$(patsubst %.cpp,%.o,$(wildcard $(MONO_FRAMEWORK_PATH)/display/ui/*.cpp)) \
-				$(patsubst %.c,%.o,$(wildcard $(MONO_FRAMEWORK_PATH)/display/hx8340/*.c)) \
-				$(patsubst %.cpp,%.o,$(wildcard $(MONO_FRAMEWORK_PATH)/display/hx8340/*.cpp)) \
+				$(patsubst %.c,%.o,$(wildcard $(MONO_FRAMEWORK_PATH)/display/ili9225g/*.c)) \
+				$(patsubst %.cpp,%.o,$(wildcard $(MONO_FRAMEWORK_PATH)/display/ili9225g/*.cpp)) \
 				$(patsubst %.c,%.o,$(wildcard $(MONO_FRAMEWORK_PATH)/wireless/*.c)) \
 				$(patsubst %.cpp,%.o,$(wildcard $(MONO_FRAMEWORK_PATH)/wireless/*.cpp)) \
 				$(patsubst %.cpp,%.o,$(wildcard $(MONO_FRAMEWORK_PATH)/media/*.cpp))
 
 MONO_INCLUDES =	$(MONO_FRAMEWORK_PATH) \
 				$(MONO_FRAMEWORK_PATH)/display \
-				$(MONO_FRAMEWORK_PATH)/display/hx8340 \
+				$(MONO_FRAMEWORK_PATH)/display/ili9225g \
 				$(MONO_FRAMEWORK_PATH)/display/ui \
 				$(MONO_FRAMEWORK_PATH)/wireless \
 				$(MONO_FRAMEWORK_PATH)/media
