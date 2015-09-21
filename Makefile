@@ -18,10 +18,15 @@ MONO_LIB=lib/monoCyLib.a
 OBJECTS =		$(patsubst %.c,%.o,$(wildcard *.c)) \
 				$(patsubst %.cpp,%.o,$(wildcard *.cpp))
 
-MBED_OBJECTS =	$(patsubst %.c,%.o,$(wildcard $(MBED_PATH)/*.c)) \
-				$(patsubst %.cpp,%.o,$(wildcard $(MBED_PATH)/*.cpp))
+MBED_OBJECTS =	$(patsubst %.c,%.o,$(wildcard $(MBED_PATH)/*.cpp)) \
+				$(patsubst %.cpp,%.o,$(wildcard $(MBED_PATH)/common/*.c)) \
+				$(patsubst %.cpp,%.o,$(wildcard $(MBED_PATH)/common/*.cpp)) \
+				$(patsubst %.cpp,%.o,$(wildcard $(MBED_PATH)/target_cypress/*.c))
 				
-MBED_INCLUDES =	$(MBED_PATH)
+MBED_INCLUDES =	$(MBED_PATH) \
+				$(MBED_PATH)/api \
+				$(MBED_PATH)/hal \
+				$(MBED_PATH)/target_cypress
 
 MONO_OBJECTS =	$(patsubst %.c,%.o,$(wildcard $(MONO_FRAMEWORK_PATH)/*.c)) \
 				$(patsubst %.cpp,%.o,$(wildcard $(MONO_FRAMEWORK_PATH)/*.cpp)) \
