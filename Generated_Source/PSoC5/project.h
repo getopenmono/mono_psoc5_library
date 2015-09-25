@@ -33,8 +33,6 @@
 #include "SPI1_PVT.h"
 #include "SPI1_CS_aliases.h"
 #include "SPI1_CS.h"
-#include "SPI1_MISO_aliases.h"
-#include "SPI1_MISO.h"
 #include "SPI0_MOSI_aliases.h"
 #include "SPI0_MOSI.h"
 #include "SPI0_MISO_aliases.h"
