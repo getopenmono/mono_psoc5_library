@@ -31,8 +31,6 @@
 #include "SPI1_SCLK.h"
 #include "SPI1.h"
 #include "SPI1_PVT.h"
-#include "SPI1_CS_aliases.h"
-#include "SPI1_CS.h"
 #include "SPI0_MOSI_aliases.h"
 #include "SPI0_MOSI.h"
 #include "SPI0_MISO_aliases.h"
