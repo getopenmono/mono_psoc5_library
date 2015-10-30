@@ -34,7 +34,7 @@
 *   Conditional Compilation Parameters
 ***************************************/
 
-#define SPI0_INTERNAL_CLOCK             (0u)
+#define SPI0_INTERNAL_CLOCK             (1u)
 
 #if(0u != SPI0_INTERNAL_CLOCK)
     #include "SPI0_IntClock.h"
