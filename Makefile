@@ -50,6 +50,8 @@ MONO_INCLUDES =	$(MONO_FRAMEWORK_PATH) \
 SYS_OBJECTS = 	$(patsubst %.c,%.o,$(wildcard $(CYPRESS_DIR)/*.c)) \
 				$(patsubst %.s,%.o,$(wildcard $(CYPRESS_DIR)/*Gnu.s))
 
+SYS_TARGET_OBJECTS = $(addprefix ./$(BUILD_DIR)/, $(SYS_OBJECTS))
+
 CC=$(ARCH)gcc
 CXX=$(ARCH)g++
 LD=$(ARCH)gcc
@@ -86,17 +88,20 @@ $(BUILD_DIR):
 	@echo "creating build directory"
 	@mkdir -p ./$(BUILD_DIR)
 
-.s.o: $(BUILD_DIR)
-	@echo "Assembling: $(notdir $<)"
-	@$(AS) $(AS_FLAGS) $(INCS) -o $(BUILD_DIR)/$(notdir $@) $<
+$(BUILD_DIR)/%.o: %.s
+	@echo "Assembling: $<"
+	@$(MKDIR) -p $(dir $@)
+	@$(AS) $(AS_FLAGS) $(INCS) -o $@ $<
 
-.c.o: $(BUILD_DIR)
-	@echo "Compiling C: $(notdir $<)"
-	@$(CC) $(CC_FLAGS) $(ONLY_C_FLAGS) $(CDEFS) $(INCS) -o $(BUILD_DIR)/$(notdir $@) $<
+$(BUILD_DIR)/%.o: %.c
+	@echo "Compiling C: $<"
+	@$(MKDIR) -p $(dir $@)
+	@$(CC) $(CC_FLAGS) $(ONLY_C_FLAGS) $(CDEFS) $(INCS) -o $@ $<
 
-.cpp.o: $(BUILD_DIR)
-	@echo "Compiling C++: $(notdir $<)"
-	@$(CXX) $(CC_FLAGS) $(ONLY_CPP_FLAGS) $(CDEFS) $(INCS) -o $(BUILD_DIR)/$(notdir $@) $<
+$(BUILD_DIR)/%.o: %.cpp
+	@echo "Compiling C++: $<"
+	@$(MKDIR) -p $(dir $@)
+	@$(CXX) $(CC_FLAGS) $(ONLY_CPP_FLAGS) $(CDEFS) $(INCS) -o $@ $<
 
 $(TARGET).elf: $(OBJECTS) $(MBED_OBJECTS) $(MONO_OBJECTS)
 	@echo "Linking $(notdir $@)"
@@ -111,9 +116,9 @@ $(TARGET):  $(OBJS)  ${LINKER_SCRIPT}
 	@echo "Other link: $(OBJS)"
 	$(LD) $(LDSCRIPT) $(OBJS) -o $@
 
-monoCyLib.a: $(SYS_OBJECTS)
+monoCyLib.a: $(COMP_LIB) $(SYS_TARGET_OBJECTS)
 	@echo "Linking static library"
-	@$(AR) rcs lib/$@ $(addprefix $(BUILD_DIR)/, $(notdir $^)) $(COMP_LIB)
+	@$(AR) rcs lib/$@ $^
 	@$(COPY) lib/$@ $(BUILD_DIR)/$@
 	@echo "Copying linker and header files to include dir"
 	@$(MKDIR) -p include
