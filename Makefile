@@ -149,7 +149,7 @@ install: $(TARGET).elf
 	$(MONOPROG) -p $(TARGET).elf --verbose 1
 
 clean:
-	$(RM) $(addprefix $(BUILD_DIR)/, $(notdir $(OBJECTS))) $(addprefix $(BUILD_DIR)/, $(notdir $(SYS_OBJECTS))) $(TARGET).elf $(TARGET).bin
+	$(RM) -r $(BUILD_DIR) $(TARGET).elf $(TARGET).bin
 
 summary: $(TARGET).elf
 	$(ELFTOOL) -S $(TARGET).elf
