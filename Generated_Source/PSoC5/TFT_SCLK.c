@@ -1,5 +1,5 @@
 /*******************************************************************************
-* File Name: SPI1_MOSI.c  
+* File Name: TFT_SCLK.c  
 * Version 2.10
 *
 * Description:
@@ -15,15 +15,15 @@
 *******************************************************************************/
 
 #include "cytypes.h"
-#include "SPI1_MOSI.h"
+#include "TFT_SCLK.h"
 
 /* APIs are not generated for P15[7:6] on PSoC 5 */
 #if !(CY_PSOC5A &&\
-	 SPI1_MOSI__PORT == 15 && ((SPI1_MOSI__MASK & 0xC0) != 0))
+	 TFT_SCLK__PORT == 15 && ((TFT_SCLK__MASK & 0xC0) != 0))
 
 
 /*******************************************************************************
-* Function Name: SPI1_MOSI_Write
+* Function Name: TFT_SCLK_Write
 ********************************************************************************
 *
 * Summary:
@@ -36,15 +36,15 @@
 *  None
 *  
 *******************************************************************************/
-void SPI1_MOSI_Write(uint8 value) 
+void TFT_SCLK_Write(uint8 value) 
 {
-    uint8 staticBits = (SPI1_MOSI_DR & (uint8)(~SPI1_MOSI_MASK));
-    SPI1_MOSI_DR = staticBits | ((uint8)(value << SPI1_MOSI_SHIFT) & SPI1_MOSI_MASK);
+    uint8 staticBits = (TFT_SCLK_DR & (uint8)(~TFT_SCLK_MASK));
+    TFT_SCLK_DR = staticBits | ((uint8)(value << TFT_SCLK_SHIFT) & TFT_SCLK_MASK);
 }
 
 
 /*******************************************************************************
-* Function Name: SPI1_MOSI_SetDriveMode
+* Function Name: TFT_SCLK_SetDriveMode
 ********************************************************************************
 *
 * Summary:
@@ -53,27 +53,27 @@ void SPI1_MOSI_Write(uint8 value)
 * Parameters:  
 *  mode:  Change the pins to one of the following drive modes.
 *
-*  SPI1_MOSI_DM_STRONG     Strong Drive 
-*  SPI1_MOSI_DM_OD_HI      Open Drain, Drives High 
-*  SPI1_MOSI_DM_OD_LO      Open Drain, Drives Low 
-*  SPI1_MOSI_DM_RES_UP     Resistive Pull Up 
-*  SPI1_MOSI_DM_RES_DWN    Resistive Pull Down 
-*  SPI1_MOSI_DM_RES_UPDWN  Resistive Pull Up/Down 
-*  SPI1_MOSI_DM_DIG_HIZ    High Impedance Digital 
-*  SPI1_MOSI_DM_ALG_HIZ    High Impedance Analog 
+*  TFT_SCLK_DM_STRONG     Strong Drive 
+*  TFT_SCLK_DM_OD_HI      Open Drain, Drives High 
+*  TFT_SCLK_DM_OD_LO      Open Drain, Drives Low 
+*  TFT_SCLK_DM_RES_UP     Resistive Pull Up 
+*  TFT_SCLK_DM_RES_DWN    Resistive Pull Down 
+*  TFT_SCLK_DM_RES_UPDWN  Resistive Pull Up/Down 
+*  TFT_SCLK_DM_DIG_HIZ    High Impedance Digital 
+*  TFT_SCLK_DM_ALG_HIZ    High Impedance Analog 
 *
 * Return: 
 *  None
 *
 *******************************************************************************/
-void SPI1_MOSI_SetDriveMode(uint8 mode) 
+void TFT_SCLK_SetDriveMode(uint8 mode) 
 {
-	CyPins_SetPinDriveMode(SPI1_MOSI_0, mode);
+	CyPins_SetPinDriveMode(TFT_SCLK_0, mode);
 }
 
 
 /*******************************************************************************
-* Function Name: SPI1_MOSI_Read
+* Function Name: TFT_SCLK_Read
 ********************************************************************************
 *
 * Summary:
@@ -87,17 +87,17 @@ void SPI1_MOSI_SetDriveMode(uint8 mode)
 *  Returns the current value of the Digital Port as a right justified number
 *  
 * Note:
-*  Macro SPI1_MOSI_ReadPS calls this function. 
+*  Macro TFT_SCLK_ReadPS calls this function. 
 *  
 *******************************************************************************/
-uint8 SPI1_MOSI_Read(void) 
+uint8 TFT_SCLK_Read(void) 
 {
-    return (SPI1_MOSI_PS & SPI1_MOSI_MASK) >> SPI1_MOSI_SHIFT;
+    return (TFT_SCLK_PS & TFT_SCLK_MASK) >> TFT_SCLK_SHIFT;
 }
 
 
 /*******************************************************************************
-* Function Name: SPI1_MOSI_ReadDataReg
+* Function Name: TFT_SCLK_ReadDataReg
 ********************************************************************************
 *
 * Summary:
@@ -110,17 +110,17 @@ uint8 SPI1_MOSI_Read(void)
 *  Returns the current value assigned to the Digital Port's data output register
 *  
 *******************************************************************************/
-uint8 SPI1_MOSI_ReadDataReg(void) 
+uint8 TFT_SCLK_ReadDataReg(void) 
 {
-    return (SPI1_MOSI_DR & SPI1_MOSI_MASK) >> SPI1_MOSI_SHIFT;
+    return (TFT_SCLK_DR & TFT_SCLK_MASK) >> TFT_SCLK_SHIFT;
 }
 
 
 /* If Interrupts Are Enabled for this Pins component */ 
-#if defined(SPI1_MOSI_INTSTAT) 
+#if defined(TFT_SCLK_INTSTAT) 
 
     /*******************************************************************************
-    * Function Name: SPI1_MOSI_ClearInterrupt
+    * Function Name: TFT_SCLK_ClearInterrupt
     ********************************************************************************
     * Summary:
     *  Clears any active interrupts attached to port and returns the value of the 
@@ -133,9 +133,9 @@ uint8 SPI1_MOSI_ReadDataReg(void)
     *  Returns the value of the interrupt status register
     *  
     *******************************************************************************/
-    uint8 SPI1_MOSI_ClearInterrupt(void) 
+    uint8 TFT_SCLK_ClearInterrupt(void) 
     {
-        return (SPI1_MOSI_INTSTAT & SPI1_MOSI_MASK) >> SPI1_MOSI_SHIFT;
+        return (TFT_SCLK_INTSTAT & TFT_SCLK_MASK) >> TFT_SCLK_SHIFT;
     }
 
 #endif /* If Interrupts Are Enabled for this Pins component */ 

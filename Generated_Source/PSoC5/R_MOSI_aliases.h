@@ -1,5 +1,5 @@
 /*******************************************************************************
-* File Name: SPI0_MISO.h  
+* File Name: R_MOSI.h  
 * Version 2.10
 *
 * Description:
@@ -14,8 +14,8 @@
 * the software package with which this file was provided.
 *******************************************************************************/
 
-#if !defined(CY_PINS_SPI0_MISO_ALIASES_H) /* Pins SPI0_MISO_ALIASES_H */
-#define CY_PINS_SPI0_MISO_ALIASES_H
+#if !defined(CY_PINS_R_MOSI_ALIASES_H) /* Pins R_MOSI_ALIASES_H */
+#define CY_PINS_R_MOSI_ALIASES_H
 
 #include "cytypes.h"
 #include "cyfitter.h"
@@ -25,8 +25,8 @@
 /***************************************
 *              Constants        
 ***************************************/
-#define SPI0_MISO_0		(SPI0_MISO__0__PC)
+#define R_MOSI_0		(R_MOSI__0__PC)
 
-#endif /* End Pins SPI0_MISO_ALIASES_H */
+#endif /* End Pins R_MOSI_ALIASES_H */
 
 /* [] END OF FILE */

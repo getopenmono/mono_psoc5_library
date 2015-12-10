@@ -1,5 +1,5 @@
 /*******************************************************************************
-* File Name: SPI1_SCLK.h  
+* File Name: SD_MOSI.h  
 * Version 2.10
 *
 * Description:
@@ -14,8 +14,8 @@
 * the software package with which this file was provided.
 *******************************************************************************/
 
-#if !defined(CY_PINS_SPI1_SCLK_ALIASES_H) /* Pins SPI1_SCLK_ALIASES_H */
-#define CY_PINS_SPI1_SCLK_ALIASES_H
+#if !defined(CY_PINS_SD_MOSI_ALIASES_H) /* Pins SD_MOSI_ALIASES_H */
+#define CY_PINS_SD_MOSI_ALIASES_H
 
 #include "cytypes.h"
 #include "cyfitter.h"
@@ -25,8 +25,8 @@
 /***************************************
 *              Constants        
 ***************************************/
-#define SPI1_SCLK_0		(SPI1_SCLK__0__PC)
+#define SD_MOSI_0		(SD_MOSI__0__PC)
 
-#endif /* End Pins SPI1_SCLK_ALIASES_H */
+#endif /* End Pins SD_MOSI_ALIASES_H */
 
 /* [] END OF FILE */

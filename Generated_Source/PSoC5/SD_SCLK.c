@@ -1,5 +1,5 @@
 /*******************************************************************************
-* File Name: SPI1_CS.c  
+* File Name: SD_SCLK.c  
 * Version 2.10
 *
 * Description:
@@ -15,15 +15,15 @@
 *******************************************************************************/
 
 #include "cytypes.h"
-#include "SPI1_CS.h"
+#include "SD_SCLK.h"
 
 /* APIs are not generated for P15[7:6] on PSoC 5 */
 #if !(CY_PSOC5A &&\
-	 SPI1_CS__PORT == 15 && ((SPI1_CS__MASK & 0xC0) != 0))
+	 SD_SCLK__PORT == 15 && ((SD_SCLK__MASK & 0xC0) != 0))
 
 
 /*******************************************************************************
-* Function Name: SPI1_CS_Write
+* Function Name: SD_SCLK_Write
 ********************************************************************************
 *
 * Summary:
@@ -36,15 +36,15 @@
 *  None
 *  
 *******************************************************************************/
-void SPI1_CS_Write(uint8 value) 
+void SD_SCLK_Write(uint8 value) 
 {
-    uint8 staticBits = (SPI1_CS_DR & (uint8)(~SPI1_CS_MASK));
-    SPI1_CS_DR = staticBits | ((uint8)(value << SPI1_CS_SHIFT) & SPI1_CS_MASK);
+    uint8 staticBits = (SD_SCLK_DR & (uint8)(~SD_SCLK_MASK));
+    SD_SCLK_DR = staticBits | ((uint8)(value << SD_SCLK_SHIFT) & SD_SCLK_MASK);
 }
 
 
 /*******************************************************************************
-* Function Name: SPI1_CS_SetDriveMode
+* Function Name: SD_SCLK_SetDriveMode
 ********************************************************************************
 *
 * Summary:
@@ -53,27 +53,27 @@ void SPI1_CS_Write(uint8 value)
 * Parameters:  
 *  mode:  Change the pins to one of the following drive modes.
 *
-*  SPI1_CS_DM_STRONG     Strong Drive 
-*  SPI1_CS_DM_OD_HI      Open Drain, Drives High 
-*  SPI1_CS_DM_OD_LO      Open Drain, Drives Low 
-*  SPI1_CS_DM_RES_UP     Resistive Pull Up 
-*  SPI1_CS_DM_RES_DWN    Resistive Pull Down 
-*  SPI1_CS_DM_RES_UPDWN  Resistive Pull Up/Down 
-*  SPI1_CS_DM_DIG_HIZ    High Impedance Digital 
-*  SPI1_CS_DM_ALG_HIZ    High Impedance Analog 
+*  SD_SCLK_DM_STRONG     Strong Drive 
+*  SD_SCLK_DM_OD_HI      Open Drain, Drives High 
+*  SD_SCLK_DM_OD_LO      Open Drain, Drives Low 
+*  SD_SCLK_DM_RES_UP     Resistive Pull Up 
+*  SD_SCLK_DM_RES_DWN    Resistive Pull Down 
+*  SD_SCLK_DM_RES_UPDWN  Resistive Pull Up/Down 
+*  SD_SCLK_DM_DIG_HIZ    High Impedance Digital 
+*  SD_SCLK_DM_ALG_HIZ    High Impedance Analog 
 *
 * Return: 
 *  None
 *
 *******************************************************************************/
-void SPI1_CS_SetDriveMode(uint8 mode) 
+void SD_SCLK_SetDriveMode(uint8 mode) 
 {
-	CyPins_SetPinDriveMode(SPI1_CS_0, mode);
+	CyPins_SetPinDriveMode(SD_SCLK_0, mode);
 }
 
 
 /*******************************************************************************
-* Function Name: SPI1_CS_Read
+* Function Name: SD_SCLK_Read
 ********************************************************************************
 *
 * Summary:
@@ -87,17 +87,17 @@ void SPI1_CS_SetDriveMode(uint8 mode)
 *  Returns the current value of the Digital Port as a right justified number
 *  
 * Note:
-*  Macro SPI1_CS_ReadPS calls this function. 
+*  Macro SD_SCLK_ReadPS calls this function. 
 *  
 *******************************************************************************/
-uint8 SPI1_CS_Read(void) 
+uint8 SD_SCLK_Read(void) 
 {
-    return (SPI1_CS_PS & SPI1_CS_MASK) >> SPI1_CS_SHIFT;
+    return (SD_SCLK_PS & SD_SCLK_MASK) >> SD_SCLK_SHIFT;
 }
 
 
 /*******************************************************************************
-* Function Name: SPI1_CS_ReadDataReg
+* Function Name: SD_SCLK_ReadDataReg
 ********************************************************************************
 *
 * Summary:
@@ -110,17 +110,17 @@ uint8 SPI1_CS_Read(void)
 *  Returns the current value assigned to the Digital Port's data output register
 *  
 *******************************************************************************/
-uint8 SPI1_CS_ReadDataReg(void) 
+uint8 SD_SCLK_ReadDataReg(void) 
 {
-    return (SPI1_CS_DR & SPI1_CS_MASK) >> SPI1_CS_SHIFT;
+    return (SD_SCLK_DR & SD_SCLK_MASK) >> SD_SCLK_SHIFT;
 }
 
 
 /* If Interrupts Are Enabled for this Pins component */ 
-#if defined(SPI1_CS_INTSTAT) 
+#if defined(SD_SCLK_INTSTAT) 
 
     /*******************************************************************************
-    * Function Name: SPI1_CS_ClearInterrupt
+    * Function Name: SD_SCLK_ClearInterrupt
     ********************************************************************************
     * Summary:
     *  Clears any active interrupts attached to port and returns the value of the 
@@ -133,9 +133,9 @@ uint8 SPI1_CS_ReadDataReg(void)
     *  Returns the value of the interrupt status register
     *  
     *******************************************************************************/
-    uint8 SPI1_CS_ClearInterrupt(void) 
+    uint8 SD_SCLK_ClearInterrupt(void) 
     {
-        return (SPI1_CS_INTSTAT & SPI1_CS_MASK) >> SPI1_CS_SHIFT;
+        return (SD_SCLK_INTSTAT & SD_SCLK_MASK) >> SD_SCLK_SHIFT;
     }
 
 #endif /* If Interrupts Are Enabled for this Pins component */ 

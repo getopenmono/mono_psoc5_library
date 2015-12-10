@@ -1,5 +1,5 @@
 /*******************************************************************************
-* File Name: SPI0_MISO.c  
+* File Name: R_MISO.c  
 * Version 2.10
 *
 * Description:
@@ -15,15 +15,15 @@
 *******************************************************************************/
 
 #include "cytypes.h"
-#include "SPI0_MISO.h"
+#include "R_MISO.h"
 
 /* APIs are not generated for P15[7:6] on PSoC 5 */
 #if !(CY_PSOC5A &&\
-	 SPI0_MISO__PORT == 15 && ((SPI0_MISO__MASK & 0xC0) != 0))
+	 R_MISO__PORT == 15 && ((R_MISO__MASK & 0xC0) != 0))
 
 
 /*******************************************************************************
-* Function Name: SPI0_MISO_Write
+* Function Name: R_MISO_Write
 ********************************************************************************
 *
 * Summary:
@@ -36,15 +36,15 @@
 *  None
 *  
 *******************************************************************************/
-void SPI0_MISO_Write(uint8 value) 
+void R_MISO_Write(uint8 value) 
 {
-    uint8 staticBits = (SPI0_MISO_DR & (uint8)(~SPI0_MISO_MASK));
-    SPI0_MISO_DR = staticBits | ((uint8)(value << SPI0_MISO_SHIFT) & SPI0_MISO_MASK);
+    uint8 staticBits = (R_MISO_DR & (uint8)(~R_MISO_MASK));
+    R_MISO_DR = staticBits | ((uint8)(value << R_MISO_SHIFT) & R_MISO_MASK);
 }
 
 
 /*******************************************************************************
-* Function Name: SPI0_MISO_SetDriveMode
+* Function Name: R_MISO_SetDriveMode
 ********************************************************************************
 *
 * Summary:
@@ -53,27 +53,27 @@ void SPI0_MISO_Write(uint8 value)
 * Parameters:  
 *  mode:  Change the pins to one of the following drive modes.
 *
-*  SPI0_MISO_DM_STRONG     Strong Drive 
-*  SPI0_MISO_DM_OD_HI      Open Drain, Drives High 
-*  SPI0_MISO_DM_OD_LO      Open Drain, Drives Low 
-*  SPI0_MISO_DM_RES_UP     Resistive Pull Up 
-*  SPI0_MISO_DM_RES_DWN    Resistive Pull Down 
-*  SPI0_MISO_DM_RES_UPDWN  Resistive Pull Up/Down 
-*  SPI0_MISO_DM_DIG_HIZ    High Impedance Digital 
-*  SPI0_MISO_DM_ALG_HIZ    High Impedance Analog 
+*  R_MISO_DM_STRONG     Strong Drive 
+*  R_MISO_DM_OD_HI      Open Drain, Drives High 
+*  R_MISO_DM_OD_LO      Open Drain, Drives Low 
+*  R_MISO_DM_RES_UP     Resistive Pull Up 
+*  R_MISO_DM_RES_DWN    Resistive Pull Down 
+*  R_MISO_DM_RES_UPDWN  Resistive Pull Up/Down 
+*  R_MISO_DM_DIG_HIZ    High Impedance Digital 
+*  R_MISO_DM_ALG_HIZ    High Impedance Analog 
 *
 * Return: 
 *  None
 *
 *******************************************************************************/
-void SPI0_MISO_SetDriveMode(uint8 mode) 
+void R_MISO_SetDriveMode(uint8 mode) 
 {
-	CyPins_SetPinDriveMode(SPI0_MISO_0, mode);
+	CyPins_SetPinDriveMode(R_MISO_0, mode);
 }
 
 
 /*******************************************************************************
-* Function Name: SPI0_MISO_Read
+* Function Name: R_MISO_Read
 ********************************************************************************
 *
 * Summary:
@@ -87,17 +87,17 @@ void SPI0_MISO_SetDriveMode(uint8 mode)
 *  Returns the current value of the Digital Port as a right justified number
 *  
 * Note:
-*  Macro SPI0_MISO_ReadPS calls this function. 
+*  Macro R_MISO_ReadPS calls this function. 
 *  
 *******************************************************************************/
-uint8 SPI0_MISO_Read(void) 
+uint8 R_MISO_Read(void) 
 {
-    return (SPI0_MISO_PS & SPI0_MISO_MASK) >> SPI0_MISO_SHIFT;
+    return (R_MISO_PS & R_MISO_MASK) >> R_MISO_SHIFT;
 }
 
 
 /*******************************************************************************
-* Function Name: SPI0_MISO_ReadDataReg
+* Function Name: R_MISO_ReadDataReg
 ********************************************************************************
 *
 * Summary:
@@ -110,17 +110,17 @@ uint8 SPI0_MISO_Read(void)
 *  Returns the current value assigned to the Digital Port's data output register
 *  
 *******************************************************************************/
-uint8 SPI0_MISO_ReadDataReg(void) 
+uint8 R_MISO_ReadDataReg(void) 
 {
-    return (SPI0_MISO_DR & SPI0_MISO_MASK) >> SPI0_MISO_SHIFT;
+    return (R_MISO_DR & R_MISO_MASK) >> R_MISO_SHIFT;
 }
 
 
 /* If Interrupts Are Enabled for this Pins component */ 
-#if defined(SPI0_MISO_INTSTAT) 
+#if defined(R_MISO_INTSTAT) 
 
     /*******************************************************************************
-    * Function Name: SPI0_MISO_ClearInterrupt
+    * Function Name: R_MISO_ClearInterrupt
     ********************************************************************************
     * Summary:
     *  Clears any active interrupts attached to port and returns the value of the 
@@ -133,9 +133,9 @@ uint8 SPI0_MISO_ReadDataReg(void)
     *  Returns the value of the interrupt status register
     *  
     *******************************************************************************/
-    uint8 SPI0_MISO_ClearInterrupt(void) 
+    uint8 R_MISO_ClearInterrupt(void) 
     {
-        return (SPI0_MISO_INTSTAT & SPI0_MISO_MASK) >> SPI0_MISO_SHIFT;
+        return (R_MISO_INTSTAT & R_MISO_MASK) >> R_MISO_SHIFT;
     }
 
 #endif /* If Interrupts Are Enabled for this Pins component */ 

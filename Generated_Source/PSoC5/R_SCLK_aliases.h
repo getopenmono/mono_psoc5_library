@@ -1,5 +1,5 @@
 /*******************************************************************************
-* File Name: SPI0_SCLK.h  
+* File Name: R_SCLK.h  
 * Version 2.10
 *
 * Description:
@@ -14,8 +14,8 @@
 * the software package with which this file was provided.
 *******************************************************************************/
 
-#if !defined(CY_PINS_SPI0_SCLK_ALIASES_H) /* Pins SPI0_SCLK_ALIASES_H */
-#define CY_PINS_SPI0_SCLK_ALIASES_H
+#if !defined(CY_PINS_R_SCLK_ALIASES_H) /* Pins R_SCLK_ALIASES_H */
+#define CY_PINS_R_SCLK_ALIASES_H
 
 #include "cytypes.h"
 #include "cyfitter.h"
@@ -25,8 +25,8 @@
 /***************************************
 *              Constants        
 ***************************************/
-#define SPI0_SCLK_0		(SPI0_SCLK__0__PC)
+#define R_SCLK_0		(R_SCLK__0__PC)
 
-#endif /* End Pins SPI0_SCLK_ALIASES_H */
+#endif /* End Pins R_SCLK_ALIASES_H */
 
 /* [] END OF FILE */
