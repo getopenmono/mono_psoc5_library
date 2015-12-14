@@ -15,10 +15,10 @@
 * the software package with which this file was provided.
 *******************************************************************************/
 
-#if !defined(CY_SPIM_PVT_SPI0_H)
-#define CY_SPIM_PVT_SPI0_H
+#if !defined(CY_SPIM_PVT_SPI_RP_H)
+#define CY_SPIM_PVT_SPI_RP_H
 
-#include "SPI0.h"
+#include "SPI_RP.h"
 
 
 /**********************************
@@ -30,24 +30,24 @@
 *   Variables with external linkage
 **********************************/
 
-extern volatile uint8 SPI0_swStatusTx;
-extern volatile uint8 SPI0_swStatusRx;
+extern volatile uint8 SPI_RP_swStatusTx;
+extern volatile uint8 SPI_RP_swStatusRx;
 
-#if(SPI0_TX_SOFTWARE_BUF_ENABLED)
-    extern volatile uint8 SPI0_txBuffer[SPI0_TX_BUFFER_SIZE];
-    extern volatile uint8 SPI0_txBufferRead;
-    extern volatile uint8 SPI0_txBufferWrite;
-    extern volatile uint8 SPI0_txBufferFull;
-#endif /* (SPI0_TX_SOFTWARE_BUF_ENABLED) */
+#if(SPI_RP_TX_SOFTWARE_BUF_ENABLED)
+    extern volatile uint8 SPI_RP_txBuffer[SPI_RP_TX_BUFFER_SIZE];
+    extern volatile uint8 SPI_RP_txBufferRead;
+    extern volatile uint8 SPI_RP_txBufferWrite;
+    extern volatile uint8 SPI_RP_txBufferFull;
+#endif /* (SPI_RP_TX_SOFTWARE_BUF_ENABLED) */
 
-#if(SPI0_RX_SOFTWARE_BUF_ENABLED)
-    extern volatile uint8 SPI0_rxBuffer[SPI0_RX_BUFFER_SIZE];
-    extern volatile uint8 SPI0_rxBufferRead;
-    extern volatile uint8 SPI0_rxBufferWrite;
-    extern volatile uint8 SPI0_rxBufferFull;
-#endif /* (SPI0_RX_SOFTWARE_BUF_ENABLED) */
+#if(SPI_RP_RX_SOFTWARE_BUF_ENABLED)
+    extern volatile uint8 SPI_RP_rxBuffer[SPI_RP_RX_BUFFER_SIZE];
+    extern volatile uint8 SPI_RP_rxBufferRead;
+    extern volatile uint8 SPI_RP_rxBufferWrite;
+    extern volatile uint8 SPI_RP_rxBufferFull;
+#endif /* (SPI_RP_RX_SOFTWARE_BUF_ENABLED) */
 
-#endif /* CY_SPIM_PVT_SPI0_H */
+#endif /* CY_SPIM_PVT_SPI_RP_H */
 
 
 /* [] END OF FILE */

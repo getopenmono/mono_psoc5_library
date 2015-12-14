@@ -1,5 +1,5 @@
 /*******************************************************************************
-* File Name: SPI0_PM.c
+* File Name: SPI_RP_PM.c
 * Version 2.50
 *
 * Description:
@@ -15,17 +15,17 @@
 * the software package with which this file was provided.
 *******************************************************************************/
 
-#include "SPI0_PVT.h"
+#include "SPI_RP_PVT.h"
 
-static SPI0_BACKUP_STRUCT SPI0_backup =
+static SPI_RP_BACKUP_STRUCT SPI_RP_backup =
 {
-    SPI0_DISABLED,
-    SPI0_BITCTR_INIT,
+    SPI_RP_DISABLED,
+    SPI_RP_BITCTR_INIT,
 };
 
 
 /*******************************************************************************
-* Function Name: SPI0_SaveConfig
+* Function Name: SPI_RP_SaveConfig
 ********************************************************************************
 *
 * Summary:
@@ -38,14 +38,14 @@ static SPI0_BACKUP_STRUCT SPI0_backup =
 *  None.
 *
 *******************************************************************************/
-void SPI0_SaveConfig(void) 
+void SPI_RP_SaveConfig(void) 
 {
 
 }
 
 
 /*******************************************************************************
-* Function Name: SPI0_RestoreConfig
+* Function Name: SPI_RP_RestoreConfig
 ********************************************************************************
 *
 * Summary:
@@ -58,14 +58,14 @@ void SPI0_SaveConfig(void)
 *  None.
 *
 *******************************************************************************/
-void SPI0_RestoreConfig(void) 
+void SPI_RP_RestoreConfig(void) 
 {
 
 }
 
 
 /*******************************************************************************
-* Function Name: SPI0_Sleep
+* Function Name: SPI_RP_Sleep
 ********************************************************************************
 *
 * Summary:
@@ -78,23 +78,23 @@ void SPI0_RestoreConfig(void)
 *  None.
 *
 * Global Variables:
-*  SPI0_backup - modified when non-retention registers are saved.
+*  SPI_RP_backup - modified when non-retention registers are saved.
 *
 * Reentrant:
 *  No.
 *
 *******************************************************************************/
-void SPI0_Sleep(void) 
+void SPI_RP_Sleep(void) 
 {
     /* Save components enable state */
-    SPI0_backup.enableState = ((uint8) SPI0_IS_ENABLED);
+    SPI_RP_backup.enableState = ((uint8) SPI_RP_IS_ENABLED);
 
-    SPI0_Stop();
+    SPI_RP_Stop();
 }
 
 
 /*******************************************************************************
-* Function Name: SPI0_Wakeup
+* Function Name: SPI_RP_Wakeup
 ********************************************************************************
 *
 * Summary:
@@ -107,41 +107,41 @@ void SPI0_Sleep(void)
 *  None.
 *
 * Global Variables:
-*  SPI0_backup - used when non-retention registers are restored.
-*  SPI0_txBufferWrite - modified every function call - resets to
+*  SPI_RP_backup - used when non-retention registers are restored.
+*  SPI_RP_txBufferWrite - modified every function call - resets to
 *  zero.
-*  SPI0_txBufferRead - modified every function call - resets to
+*  SPI_RP_txBufferRead - modified every function call - resets to
 *  zero.
-*  SPI0_rxBufferWrite - modified every function call - resets to
+*  SPI_RP_rxBufferWrite - modified every function call - resets to
 *  zero.
-*  SPI0_rxBufferRead - modified every function call - resets to
+*  SPI_RP_rxBufferRead - modified every function call - resets to
 *  zero.
 *
 * Reentrant:
 *  No.
 *
 *******************************************************************************/
-void SPI0_Wakeup(void) 
+void SPI_RP_Wakeup(void) 
 {
-    #if(SPI0_RX_SOFTWARE_BUF_ENABLED)
-        SPI0_rxBufferFull  = 0u;
-        SPI0_rxBufferRead  = 0u;
-        SPI0_rxBufferWrite = 0u;
-    #endif /* (SPI0_RX_SOFTWARE_BUF_ENABLED) */
+    #if(SPI_RP_RX_SOFTWARE_BUF_ENABLED)
+        SPI_RP_rxBufferFull  = 0u;
+        SPI_RP_rxBufferRead  = 0u;
+        SPI_RP_rxBufferWrite = 0u;
+    #endif /* (SPI_RP_RX_SOFTWARE_BUF_ENABLED) */
 
-    #if(SPI0_TX_SOFTWARE_BUF_ENABLED)
-        SPI0_txBufferFull  = 0u;
-        SPI0_txBufferRead  = 0u;
-        SPI0_txBufferWrite = 0u;
-    #endif /* (SPI0_TX_SOFTWARE_BUF_ENABLED) */
+    #if(SPI_RP_TX_SOFTWARE_BUF_ENABLED)
+        SPI_RP_txBufferFull  = 0u;
+        SPI_RP_txBufferRead  = 0u;
+        SPI_RP_txBufferWrite = 0u;
+    #endif /* (SPI_RP_TX_SOFTWARE_BUF_ENABLED) */
 
     /* Clear any data from the RX and TX FIFO */
-    SPI0_ClearFIFO();
+    SPI_RP_ClearFIFO();
 
     /* Restore components block enable state */
-    if(0u != SPI0_backup.enableState)
+    if(0u != SPI_RP_backup.enableState)
     {
-        SPI0_Enable();
+        SPI_RP_Enable();
     }
 }
 

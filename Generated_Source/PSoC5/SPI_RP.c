@@ -1,5 +1,5 @@
 /*******************************************************************************
-* File Name: SPI0.c
+* File Name: SPI_RP.c
 * Version 2.50
 *
 * Description:
@@ -15,30 +15,30 @@
 * the software package with which this file was provided.
 *******************************************************************************/
 
-#include "SPI0_PVT.h"
+#include "SPI_RP_PVT.h"
 
-#if(SPI0_TX_SOFTWARE_BUF_ENABLED)
-    volatile uint8 SPI0_txBuffer[SPI0_TX_BUFFER_SIZE];
-    volatile uint8 SPI0_txBufferFull;
-    volatile uint8 SPI0_txBufferRead;
-    volatile uint8 SPI0_txBufferWrite;
-#endif /* (SPI0_TX_SOFTWARE_BUF_ENABLED) */
+#if(SPI_RP_TX_SOFTWARE_BUF_ENABLED)
+    volatile uint8 SPI_RP_txBuffer[SPI_RP_TX_BUFFER_SIZE];
+    volatile uint8 SPI_RP_txBufferFull;
+    volatile uint8 SPI_RP_txBufferRead;
+    volatile uint8 SPI_RP_txBufferWrite;
+#endif /* (SPI_RP_TX_SOFTWARE_BUF_ENABLED) */
 
-#if(SPI0_RX_SOFTWARE_BUF_ENABLED)
-    volatile uint8 SPI0_rxBuffer[SPI0_RX_BUFFER_SIZE];
-    volatile uint8 SPI0_rxBufferFull;
-    volatile uint8 SPI0_rxBufferRead;
-    volatile uint8 SPI0_rxBufferWrite;
-#endif /* (SPI0_RX_SOFTWARE_BUF_ENABLED) */
+#if(SPI_RP_RX_SOFTWARE_BUF_ENABLED)
+    volatile uint8 SPI_RP_rxBuffer[SPI_RP_RX_BUFFER_SIZE];
+    volatile uint8 SPI_RP_rxBufferFull;
+    volatile uint8 SPI_RP_rxBufferRead;
+    volatile uint8 SPI_RP_rxBufferWrite;
+#endif /* (SPI_RP_RX_SOFTWARE_BUF_ENABLED) */
 
-uint8 SPI0_initVar = 0u;
+uint8 SPI_RP_initVar = 0u;
 
-volatile uint8 SPI0_swStatusTx;
-volatile uint8 SPI0_swStatusRx;
+volatile uint8 SPI_RP_swStatusTx;
+volatile uint8 SPI_RP_swStatusRx;
 
 
 /*******************************************************************************
-* Function Name: SPI0_Init
+* Function Name: SPI_RP_Init
 ********************************************************************************
 *
 * Summary:
@@ -60,51 +60,51 @@ volatile uint8 SPI0_swStatusRx;
 *  No.
 *
 *******************************************************************************/
-void SPI0_Init(void) 
+void SPI_RP_Init(void) 
 {
     /* Initialize the Bit counter */
-    SPI0_COUNTER_PERIOD_REG = SPI0_BITCTR_INIT;
+    SPI_RP_COUNTER_PERIOD_REG = SPI_RP_BITCTR_INIT;
 
     /* Init TX ISR  */
-    #if(0u != SPI0_INTERNAL_TX_INT_ENABLED)
-        CyIntDisable         (SPI0_TX_ISR_NUMBER);
-        CyIntSetPriority     (SPI0_TX_ISR_NUMBER,  SPI0_TX_ISR_PRIORITY);
-        (void) CyIntSetVector(SPI0_TX_ISR_NUMBER, &SPI0_TX_ISR);
-    #endif /* (0u != SPI0_INTERNAL_TX_INT_ENABLED) */
+    #if(0u != SPI_RP_INTERNAL_TX_INT_ENABLED)
+        CyIntDisable         (SPI_RP_TX_ISR_NUMBER);
+        CyIntSetPriority     (SPI_RP_TX_ISR_NUMBER,  SPI_RP_TX_ISR_PRIORITY);
+        (void) CyIntSetVector(SPI_RP_TX_ISR_NUMBER, &SPI_RP_TX_ISR);
+    #endif /* (0u != SPI_RP_INTERNAL_TX_INT_ENABLED) */
 
     /* Init RX ISR  */
-    #if(0u != SPI0_INTERNAL_RX_INT_ENABLED)
-        CyIntDisable         (SPI0_RX_ISR_NUMBER);
-        CyIntSetPriority     (SPI0_RX_ISR_NUMBER,  SPI0_RX_ISR_PRIORITY);
-        (void) CyIntSetVector(SPI0_RX_ISR_NUMBER, &SPI0_RX_ISR);
-    #endif /* (0u != SPI0_INTERNAL_RX_INT_ENABLED) */
+    #if(0u != SPI_RP_INTERNAL_RX_INT_ENABLED)
+        CyIntDisable         (SPI_RP_RX_ISR_NUMBER);
+        CyIntSetPriority     (SPI_RP_RX_ISR_NUMBER,  SPI_RP_RX_ISR_PRIORITY);
+        (void) CyIntSetVector(SPI_RP_RX_ISR_NUMBER, &SPI_RP_RX_ISR);
+    #endif /* (0u != SPI_RP_INTERNAL_RX_INT_ENABLED) */
 
     /* Clear any stray data from the RX and TX FIFO */
-    SPI0_ClearFIFO();
+    SPI_RP_ClearFIFO();
 
-    #if(SPI0_RX_SOFTWARE_BUF_ENABLED)
-        SPI0_rxBufferFull  = 0u;
-        SPI0_rxBufferRead  = 0u;
-        SPI0_rxBufferWrite = 0u;
-    #endif /* (SPI0_RX_SOFTWARE_BUF_ENABLED) */
+    #if(SPI_RP_RX_SOFTWARE_BUF_ENABLED)
+        SPI_RP_rxBufferFull  = 0u;
+        SPI_RP_rxBufferRead  = 0u;
+        SPI_RP_rxBufferWrite = 0u;
+    #endif /* (SPI_RP_RX_SOFTWARE_BUF_ENABLED) */
 
-    #if(SPI0_TX_SOFTWARE_BUF_ENABLED)
-        SPI0_txBufferFull  = 0u;
-        SPI0_txBufferRead  = 0u;
-        SPI0_txBufferWrite = 0u;
-    #endif /* (SPI0_TX_SOFTWARE_BUF_ENABLED) */
+    #if(SPI_RP_TX_SOFTWARE_BUF_ENABLED)
+        SPI_RP_txBufferFull  = 0u;
+        SPI_RP_txBufferRead  = 0u;
+        SPI_RP_txBufferWrite = 0u;
+    #endif /* (SPI_RP_TX_SOFTWARE_BUF_ENABLED) */
 
-    (void) SPI0_ReadTxStatus(); /* Clear Tx status and swStatusTx */
-    (void) SPI0_ReadRxStatus(); /* Clear Rx status and swStatusRx */
+    (void) SPI_RP_ReadTxStatus(); /* Clear Tx status and swStatusTx */
+    (void) SPI_RP_ReadRxStatus(); /* Clear Rx status and swStatusRx */
 
     /* Configure TX and RX interrupt mask */
-    SPI0_TX_STATUS_MASK_REG = SPI0_TX_INIT_INTERRUPTS_MASK;
-    SPI0_RX_STATUS_MASK_REG = SPI0_RX_INIT_INTERRUPTS_MASK;
+    SPI_RP_TX_STATUS_MASK_REG = SPI_RP_TX_INIT_INTERRUPTS_MASK;
+    SPI_RP_RX_STATUS_MASK_REG = SPI_RP_RX_INIT_INTERRUPTS_MASK;
 }
 
 
 /*******************************************************************************
-* Function Name: SPI0_Enable
+* Function Name: SPI_RP_Enable
 ********************************************************************************
 *
 * Summary:
@@ -117,27 +117,27 @@ void SPI0_Init(void)
 *  None.
 *
 *******************************************************************************/
-void SPI0_Enable(void) 
+void SPI_RP_Enable(void) 
 {
     uint8 enableInterrupts;
 
     enableInterrupts = CyEnterCriticalSection();
-    SPI0_COUNTER_CONTROL_REG |= SPI0_CNTR_ENABLE;
-    SPI0_TX_STATUS_ACTL_REG  |= SPI0_INT_ENABLE;
-    SPI0_RX_STATUS_ACTL_REG  |= SPI0_INT_ENABLE;
+    SPI_RP_COUNTER_CONTROL_REG |= SPI_RP_CNTR_ENABLE;
+    SPI_RP_TX_STATUS_ACTL_REG  |= SPI_RP_INT_ENABLE;
+    SPI_RP_RX_STATUS_ACTL_REG  |= SPI_RP_INT_ENABLE;
     CyExitCriticalSection(enableInterrupts);
 
-    #if(0u != SPI0_INTERNAL_CLOCK)
-        SPI0_IntClock_Enable();
-    #endif /* (0u != SPI0_INTERNAL_CLOCK) */
+    #if(0u != SPI_RP_INTERNAL_CLOCK)
+        SPI_RP_IntClock_Enable();
+    #endif /* (0u != SPI_RP_INTERNAL_CLOCK) */
 
-    SPI0_EnableTxInt();
-    SPI0_EnableRxInt();
+    SPI_RP_EnableTxInt();
+    SPI_RP_EnableRxInt();
 }
 
 
 /*******************************************************************************
-* Function Name: SPI0_Start
+* Function Name: SPI_RP_Start
 ********************************************************************************
 *
 * Summary:
@@ -150,7 +150,7 @@ void SPI0_Enable(void)
 *  None.
 *
 * Global variables:
-*  SPI0_initVar - used to check initial configuration, modified on
+*  SPI_RP_initVar - used to check initial configuration, modified on
 *  first function call.
 *
 * Theory:
@@ -160,20 +160,20 @@ void SPI0_Enable(void)
 *  No.
 *
 *******************************************************************************/
-void SPI0_Start(void) 
+void SPI_RP_Start(void) 
 {
-    if(0u == SPI0_initVar)
+    if(0u == SPI_RP_initVar)
     {
-        SPI0_Init();
-        SPI0_initVar = 1u;
+        SPI_RP_Init();
+        SPI_RP_initVar = 1u;
     }
 
-    SPI0_Enable();
+    SPI_RP_Enable();
 }
 
 
 /*******************************************************************************
-* Function Name: SPI0_Stop
+* Function Name: SPI_RP_Stop
 ********************************************************************************
 *
 * Summary:
@@ -189,26 +189,26 @@ void SPI0_Start(void)
 *  Disable the clock input to enable operation.
 *
 *******************************************************************************/
-void SPI0_Stop(void) 
+void SPI_RP_Stop(void) 
 {
     uint8 enableInterrupts;
 
     enableInterrupts = CyEnterCriticalSection();
-    SPI0_TX_STATUS_ACTL_REG &= ((uint8) ~SPI0_INT_ENABLE);
-    SPI0_RX_STATUS_ACTL_REG &= ((uint8) ~SPI0_INT_ENABLE);
+    SPI_RP_TX_STATUS_ACTL_REG &= ((uint8) ~SPI_RP_INT_ENABLE);
+    SPI_RP_RX_STATUS_ACTL_REG &= ((uint8) ~SPI_RP_INT_ENABLE);
     CyExitCriticalSection(enableInterrupts);
 
-    #if(0u != SPI0_INTERNAL_CLOCK)
-        SPI0_IntClock_Disable();
-    #endif /* (0u != SPI0_INTERNAL_CLOCK) */
+    #if(0u != SPI_RP_INTERNAL_CLOCK)
+        SPI_RP_IntClock_Disable();
+    #endif /* (0u != SPI_RP_INTERNAL_CLOCK) */
 
-    SPI0_DisableTxInt();
-    SPI0_DisableRxInt();
+    SPI_RP_DisableTxInt();
+    SPI_RP_DisableRxInt();
 }
 
 
 /*******************************************************************************
-* Function Name: SPI0_EnableTxInt
+* Function Name: SPI_RP_EnableTxInt
 ********************************************************************************
 *
 * Summary:
@@ -224,16 +224,16 @@ void SPI0_Stop(void)
 *  Enable the internal Tx interrupt output -or- the interrupt component itself.
 *
 *******************************************************************************/
-void SPI0_EnableTxInt(void) 
+void SPI_RP_EnableTxInt(void) 
 {
-    #if(0u != SPI0_INTERNAL_TX_INT_ENABLED)
-        CyIntEnable(SPI0_TX_ISR_NUMBER);
-    #endif /* (0u != SPI0_INTERNAL_TX_INT_ENABLED) */
+    #if(0u != SPI_RP_INTERNAL_TX_INT_ENABLED)
+        CyIntEnable(SPI_RP_TX_ISR_NUMBER);
+    #endif /* (0u != SPI_RP_INTERNAL_TX_INT_ENABLED) */
 }
 
 
 /*******************************************************************************
-* Function Name: SPI0_EnableRxInt
+* Function Name: SPI_RP_EnableRxInt
 ********************************************************************************
 *
 * Summary:
@@ -249,16 +249,16 @@ void SPI0_EnableTxInt(void)
 *  Enable the internal Rx interrupt output -or- the interrupt component itself.
 *
 *******************************************************************************/
-void SPI0_EnableRxInt(void) 
+void SPI_RP_EnableRxInt(void) 
 {
-    #if(0u != SPI0_INTERNAL_RX_INT_ENABLED)
-        CyIntEnable(SPI0_RX_ISR_NUMBER);
-    #endif /* (0u != SPI0_INTERNAL_RX_INT_ENABLED) */
+    #if(0u != SPI_RP_INTERNAL_RX_INT_ENABLED)
+        CyIntEnable(SPI_RP_RX_ISR_NUMBER);
+    #endif /* (0u != SPI_RP_INTERNAL_RX_INT_ENABLED) */
 }
 
 
 /*******************************************************************************
-* Function Name: SPI0_DisableTxInt
+* Function Name: SPI_RP_DisableTxInt
 ********************************************************************************
 *
 * Summary:
@@ -274,16 +274,16 @@ void SPI0_EnableRxInt(void)
 *  Disable the internal Tx interrupt output -or- the interrupt component itself.
 *
 *******************************************************************************/
-void SPI0_DisableTxInt(void) 
+void SPI_RP_DisableTxInt(void) 
 {
-    #if(0u != SPI0_INTERNAL_TX_INT_ENABLED)
-        CyIntDisable(SPI0_TX_ISR_NUMBER);
-    #endif /* (0u != SPI0_INTERNAL_TX_INT_ENABLED) */
+    #if(0u != SPI_RP_INTERNAL_TX_INT_ENABLED)
+        CyIntDisable(SPI_RP_TX_ISR_NUMBER);
+    #endif /* (0u != SPI_RP_INTERNAL_TX_INT_ENABLED) */
 }
 
 
 /*******************************************************************************
-* Function Name: SPI0_DisableRxInt
+* Function Name: SPI_RP_DisableRxInt
 ********************************************************************************
 *
 * Summary:
@@ -299,16 +299,16 @@ void SPI0_DisableTxInt(void)
 *  Disable the internal Rx interrupt output -or- the interrupt component itself.
 *
 *******************************************************************************/
-void SPI0_DisableRxInt(void) 
+void SPI_RP_DisableRxInt(void) 
 {
-    #if(0u != SPI0_INTERNAL_RX_INT_ENABLED)
-        CyIntDisable(SPI0_RX_ISR_NUMBER);
-    #endif /* (0u != SPI0_INTERNAL_RX_INT_ENABLED) */
+    #if(0u != SPI_RP_INTERNAL_RX_INT_ENABLED)
+        CyIntDisable(SPI_RP_RX_ISR_NUMBER);
+    #endif /* (0u != SPI_RP_INTERNAL_RX_INT_ENABLED) */
 }
 
 
 /*******************************************************************************
-* Function Name: SPI0_SetTxInterruptMode
+* Function Name: SPI_RP_SetTxInterruptMode
 ********************************************************************************
 *
 * Summary:
@@ -325,14 +325,14 @@ void SPI0_DisableRxInt(void)
 *  Enables the output of specific status bits to the interrupt controller.
 *
 *******************************************************************************/
-void SPI0_SetTxInterruptMode(uint8 intSrc) 
+void SPI_RP_SetTxInterruptMode(uint8 intSrc) 
 {
-    SPI0_TX_STATUS_MASK_REG = intSrc;
+    SPI_RP_TX_STATUS_MASK_REG = intSrc;
 }
 
 
 /*******************************************************************************
-* Function Name: SPI0_SetRxInterruptMode
+* Function Name: SPI_RP_SetRxInterruptMode
 ********************************************************************************
 *
 * Summary:
@@ -349,14 +349,14 @@ void SPI0_SetTxInterruptMode(uint8 intSrc)
 *  Enables the output of specific status bits to the interrupt controller.
 *
 *******************************************************************************/
-void SPI0_SetRxInterruptMode(uint8 intSrc) 
+void SPI_RP_SetRxInterruptMode(uint8 intSrc) 
 {
-    SPI0_RX_STATUS_MASK_REG  = intSrc;
+    SPI_RP_RX_STATUS_MASK_REG  = intSrc;
 }
 
 
 /*******************************************************************************
-* Function Name: SPI0_ReadTxStatus
+* Function Name: SPI_RP_ReadTxStatus
 ********************************************************************************
 *
 * Summary:
@@ -369,7 +369,7 @@ void SPI0_SetRxInterruptMode(uint8 intSrc)
 *  Contents of the Tx status register.
 *
 * Global variables:
-*  SPI0_swStatusTx - used to store in software status register,
+*  SPI_RP_swStatusTx - used to store in software status register,
 *  modified every function call - resets to zero.
 *
 * Theory:
@@ -383,31 +383,31 @@ void SPI0_SetRxInterruptMode(uint8 intSrc)
 *  No.
 *
 *******************************************************************************/
-uint8 SPI0_ReadTxStatus(void) 
+uint8 SPI_RP_ReadTxStatus(void) 
 {
     uint8 tmpStatus;
 
-    #if(SPI0_TX_SOFTWARE_BUF_ENABLED)
+    #if(SPI_RP_TX_SOFTWARE_BUF_ENABLED)
         /* Disable TX interrupt to protect global veriables */
-        SPI0_DisableTxInt();
+        SPI_RP_DisableTxInt();
 
-        tmpStatus = SPI0_GET_STATUS_TX(SPI0_swStatusTx);
-        SPI0_swStatusTx = 0u;
+        tmpStatus = SPI_RP_GET_STATUS_TX(SPI_RP_swStatusTx);
+        SPI_RP_swStatusTx = 0u;
 
-        SPI0_EnableTxInt();
+        SPI_RP_EnableTxInt();
 
     #else
 
-        tmpStatus = SPI0_TX_STATUS_REG;
+        tmpStatus = SPI_RP_TX_STATUS_REG;
 
-    #endif /* (SPI0_TX_SOFTWARE_BUF_ENABLED) */
+    #endif /* (SPI_RP_TX_SOFTWARE_BUF_ENABLED) */
 
     return(tmpStatus);
 }
 
 
 /*******************************************************************************
-* Function Name: SPI0_ReadRxStatus
+* Function Name: SPI_RP_ReadRxStatus
 ********************************************************************************
 *
 * Summary:
@@ -420,7 +420,7 @@ uint8 SPI0_ReadTxStatus(void)
 *  Contents of the Rx status register.
 *
 * Global variables:
-*  SPI0_swStatusRx - used to store in software Rx status register,
+*  SPI_RP_swStatusRx - used to store in software Rx status register,
 *  modified every function call - resets to zero.
 *
 * Theory:
@@ -434,31 +434,31 @@ uint8 SPI0_ReadTxStatus(void)
 *  No.
 *
 *******************************************************************************/
-uint8 SPI0_ReadRxStatus(void) 
+uint8 SPI_RP_ReadRxStatus(void) 
 {
     uint8 tmpStatus;
 
-    #if(SPI0_RX_SOFTWARE_BUF_ENABLED)
+    #if(SPI_RP_RX_SOFTWARE_BUF_ENABLED)
         /* Disable RX interrupt to protect global veriables */
-        SPI0_DisableRxInt();
+        SPI_RP_DisableRxInt();
 
-        tmpStatus = SPI0_GET_STATUS_RX(SPI0_swStatusRx);
-        SPI0_swStatusRx = 0u;
+        tmpStatus = SPI_RP_GET_STATUS_RX(SPI_RP_swStatusRx);
+        SPI_RP_swStatusRx = 0u;
 
-        SPI0_EnableRxInt();
+        SPI_RP_EnableRxInt();
 
     #else
 
-        tmpStatus = SPI0_RX_STATUS_REG;
+        tmpStatus = SPI_RP_RX_STATUS_REG;
 
-    #endif /* (SPI0_RX_SOFTWARE_BUF_ENABLED) */
+    #endif /* (SPI_RP_RX_SOFTWARE_BUF_ENABLED) */
 
     return(tmpStatus);
 }
 
 
 /*******************************************************************************
-* Function Name: SPI0_WriteTxData
+* Function Name: SPI_RP_WriteTxData
 ********************************************************************************
 *
 * Summary:
@@ -471,12 +471,12 @@ uint8 SPI0_ReadRxStatus(void)
 *  None.
 *
 * Global variables:
-*  SPI0_txBufferWrite - used for the account of the bytes which
+*  SPI_RP_txBufferWrite - used for the account of the bytes which
 *  have been written down in the TX software buffer, modified every function
 *  call if TX Software Buffer is used.
-*  SPI0_txBufferRead - used for the account of the bytes which
+*  SPI_RP_txBufferRead - used for the account of the bytes which
 *  have been read from the TX software buffer.
-*  SPI0_txBuffer[SPI0_TX_BUFFER_SIZE] - used to store
+*  SPI_RP_txBuffer[SPI_RP_TX_BUFFER_SIZE] - used to store
 *  data to sending, modified every function call if TX Software Buffer is used.
 *
 * Theory:
@@ -491,9 +491,9 @@ uint8 SPI0_ReadRxStatus(void)
 *  No.
 *
 *******************************************************************************/
-void SPI0_WriteTxData(uint8 txData) 
+void SPI_RP_WriteTxData(uint8 txData) 
 {
-    #if(SPI0_TX_SOFTWARE_BUF_ENABLED)
+    #if(SPI_RP_TX_SOFTWARE_BUF_ENABLED)
 
         uint8 tempStatus;
         uint8 tmpTxBufferRead;
@@ -501,72 +501,72 @@ void SPI0_WriteTxData(uint8 txData)
         /* Block if TX buffer is FULL: don't overwrite */
         do
         {
-            tmpTxBufferRead = SPI0_txBufferRead;
+            tmpTxBufferRead = SPI_RP_txBufferRead;
             if(0u == tmpTxBufferRead)
             {
-                tmpTxBufferRead = (SPI0_TX_BUFFER_SIZE - 1u);
+                tmpTxBufferRead = (SPI_RP_TX_BUFFER_SIZE - 1u);
             }
             else
             {
                 tmpTxBufferRead--;
             }
 
-        }while(tmpTxBufferRead == SPI0_txBufferWrite);
+        }while(tmpTxBufferRead == SPI_RP_txBufferWrite);
 
         /* Disable TX interrupt to protect global veriables */
-        SPI0_DisableTxInt();
+        SPI_RP_DisableTxInt();
 
-        tempStatus = SPI0_GET_STATUS_TX(SPI0_swStatusTx);
-        SPI0_swStatusTx = tempStatus;
+        tempStatus = SPI_RP_GET_STATUS_TX(SPI_RP_swStatusTx);
+        SPI_RP_swStatusTx = tempStatus;
 
 
-        if((SPI0_txBufferRead == SPI0_txBufferWrite) &&
-           (0u != (SPI0_swStatusTx & SPI0_STS_TX_FIFO_NOT_FULL)))
+        if((SPI_RP_txBufferRead == SPI_RP_txBufferWrite) &&
+           (0u != (SPI_RP_swStatusTx & SPI_RP_STS_TX_FIFO_NOT_FULL)))
         {
             /* Put data element into the TX FIFO */
-            CY_SET_REG8(SPI0_TXDATA_PTR, txData);
+            CY_SET_REG8(SPI_RP_TXDATA_PTR, txData);
         }
         else
         {
             /* Add to the TX software buffer */
-            SPI0_txBufferWrite++;
-            if(SPI0_txBufferWrite >= SPI0_TX_BUFFER_SIZE)
+            SPI_RP_txBufferWrite++;
+            if(SPI_RP_txBufferWrite >= SPI_RP_TX_BUFFER_SIZE)
             {
-                SPI0_txBufferWrite = 0u;
+                SPI_RP_txBufferWrite = 0u;
             }
 
-            if(SPI0_txBufferWrite == SPI0_txBufferRead)
+            if(SPI_RP_txBufferWrite == SPI_RP_txBufferRead)
             {
-                SPI0_txBufferRead++;
-                if(SPI0_txBufferRead >= SPI0_TX_BUFFER_SIZE)
+                SPI_RP_txBufferRead++;
+                if(SPI_RP_txBufferRead >= SPI_RP_TX_BUFFER_SIZE)
                 {
-                    SPI0_txBufferRead = 0u;
+                    SPI_RP_txBufferRead = 0u;
                 }
-                SPI0_txBufferFull = 1u;
+                SPI_RP_txBufferFull = 1u;
             }
 
-            SPI0_txBuffer[SPI0_txBufferWrite] = txData;
+            SPI_RP_txBuffer[SPI_RP_txBufferWrite] = txData;
 
-            SPI0_TX_STATUS_MASK_REG |= SPI0_STS_TX_FIFO_NOT_FULL;
+            SPI_RP_TX_STATUS_MASK_REG |= SPI_RP_STS_TX_FIFO_NOT_FULL;
         }
 
-        SPI0_EnableTxInt();
+        SPI_RP_EnableTxInt();
 
     #else
         /* Wait until TX FIFO has a place */
-        while(0u == (SPI0_TX_STATUS_REG & SPI0_STS_TX_FIFO_NOT_FULL))
+        while(0u == (SPI_RP_TX_STATUS_REG & SPI_RP_STS_TX_FIFO_NOT_FULL))
         {
         }
 
         /* Put data element into the TX FIFO */
-        CY_SET_REG8(SPI0_TXDATA_PTR, txData);
+        CY_SET_REG8(SPI_RP_TXDATA_PTR, txData);
 
-    #endif /* (SPI0_TX_SOFTWARE_BUF_ENABLED) */
+    #endif /* (SPI_RP_TX_SOFTWARE_BUF_ENABLED) */
 }
 
 
 /*******************************************************************************
-* Function Name: SPI0_ReadRxData
+* Function Name: SPI_RP_ReadRxData
 ********************************************************************************
 *
 * Summary:
@@ -579,12 +579,12 @@ void SPI0_WriteTxData(uint8 txData)
 *  The next byte of data read from the FIFO.
 *
 * Global variables:
-*  SPI0_rxBufferWrite - used for the account of the bytes which
+*  SPI_RP_rxBufferWrite - used for the account of the bytes which
 *  have been written down in the RX software buffer.
-*  SPI0_rxBufferRead - used for the account of the bytes which
+*  SPI_RP_rxBufferRead - used for the account of the bytes which
 *  have been read from the RX software buffer, modified every function
 *  call if RX Software Buffer is used.
-*  SPI0_rxBuffer[SPI0_RX_BUFFER_SIZE] - used to store
+*  SPI_RP_rxBuffer[SPI_RP_RX_BUFFER_SIZE] - used to store
 *  received data.
 *
 * Theory:
@@ -599,47 +599,47 @@ void SPI0_WriteTxData(uint8 txData)
 *  No.
 *
 *******************************************************************************/
-uint8 SPI0_ReadRxData(void) 
+uint8 SPI_RP_ReadRxData(void) 
 {
     uint8 rxData;
 
-    #if(SPI0_RX_SOFTWARE_BUF_ENABLED)
+    #if(SPI_RP_RX_SOFTWARE_BUF_ENABLED)
 
         /* Disable RX interrupt to protect global veriables */
-        SPI0_DisableRxInt();
+        SPI_RP_DisableRxInt();
 
-        if(SPI0_rxBufferRead != SPI0_rxBufferWrite)
+        if(SPI_RP_rxBufferRead != SPI_RP_rxBufferWrite)
         {
-            if(0u == SPI0_rxBufferFull)
+            if(0u == SPI_RP_rxBufferFull)
             {
-                SPI0_rxBufferRead++;
-                if(SPI0_rxBufferRead >= SPI0_RX_BUFFER_SIZE)
+                SPI_RP_rxBufferRead++;
+                if(SPI_RP_rxBufferRead >= SPI_RP_RX_BUFFER_SIZE)
                 {
-                    SPI0_rxBufferRead = 0u;
+                    SPI_RP_rxBufferRead = 0u;
                 }
             }
             else
             {
-                SPI0_rxBufferFull = 0u;
+                SPI_RP_rxBufferFull = 0u;
             }
         }
 
-        rxData = SPI0_rxBuffer[SPI0_rxBufferRead];
+        rxData = SPI_RP_rxBuffer[SPI_RP_rxBufferRead];
 
-        SPI0_EnableRxInt();
+        SPI_RP_EnableRxInt();
 
     #else
 
-        rxData = CY_GET_REG8(SPI0_RXDATA_PTR);
+        rxData = CY_GET_REG8(SPI_RP_RXDATA_PTR);
 
-    #endif /* (SPI0_RX_SOFTWARE_BUF_ENABLED) */
+    #endif /* (SPI_RP_RX_SOFTWARE_BUF_ENABLED) */
 
     return(rxData);
 }
 
 
 /*******************************************************************************
-* Function Name: SPI0_GetRxBufferSize
+* Function Name: SPI_RP_GetRxBufferSize
 ********************************************************************************
 *
 * Summary:
@@ -654,52 +654,52 @@ uint8 SPI0_ReadRxData(void)
 *  Integer count of the number of bytes/words in the RX buffer.
 *
 * Global variables:
-*  SPI0_rxBufferWrite - used for the account of the bytes which
+*  SPI_RP_rxBufferWrite - used for the account of the bytes which
 *  have been written down in the RX software buffer.
-*  SPI0_rxBufferRead - used for the account of the bytes which
+*  SPI_RP_rxBufferRead - used for the account of the bytes which
 *  have been read from the RX software buffer.
 *
 * Side Effects:
 *  Clear status register of the component.
 *
 *******************************************************************************/
-uint8 SPI0_GetRxBufferSize(void) 
+uint8 SPI_RP_GetRxBufferSize(void) 
 {
     uint8 size;
 
-    #if(SPI0_RX_SOFTWARE_BUF_ENABLED)
+    #if(SPI_RP_RX_SOFTWARE_BUF_ENABLED)
 
         /* Disable RX interrupt to protect global veriables */
-        SPI0_DisableRxInt();
+        SPI_RP_DisableRxInt();
 
-        if(SPI0_rxBufferRead == SPI0_rxBufferWrite)
+        if(SPI_RP_rxBufferRead == SPI_RP_rxBufferWrite)
         {
             size = 0u;
         }
-        else if(SPI0_rxBufferRead < SPI0_rxBufferWrite)
+        else if(SPI_RP_rxBufferRead < SPI_RP_rxBufferWrite)
         {
-            size = (SPI0_rxBufferWrite - SPI0_rxBufferRead);
+            size = (SPI_RP_rxBufferWrite - SPI_RP_rxBufferRead);
         }
         else
         {
-            size = (SPI0_RX_BUFFER_SIZE - SPI0_rxBufferRead) + SPI0_rxBufferWrite;
+            size = (SPI_RP_RX_BUFFER_SIZE - SPI_RP_rxBufferRead) + SPI_RP_rxBufferWrite;
         }
 
-        SPI0_EnableRxInt();
+        SPI_RP_EnableRxInt();
 
     #else
 
         /* We can only know if there is data in the RX FIFO */
-        size = (0u != (SPI0_RX_STATUS_REG & SPI0_STS_RX_FIFO_NOT_EMPTY)) ? 1u : 0u;
+        size = (0u != (SPI_RP_RX_STATUS_REG & SPI_RP_STS_RX_FIFO_NOT_EMPTY)) ? 1u : 0u;
 
-    #endif /* (SPI0_TX_SOFTWARE_BUF_ENABLED) */
+    #endif /* (SPI_RP_TX_SOFTWARE_BUF_ENABLED) */
 
     return(size);
 }
 
 
 /*******************************************************************************
-* Function Name: SPI0_GetTxBufferSize
+* Function Name: SPI_RP_GetTxBufferSize
 ********************************************************************************
 *
 * Summary:
@@ -715,63 +715,63 @@ uint8 SPI0_GetRxBufferSize(void)
 *  Integer count of the number of bytes/words in the TX buffer.
 *
 * Global variables:
-*  SPI0_txBufferWrite - used for the account of the bytes which
+*  SPI_RP_txBufferWrite - used for the account of the bytes which
 *  have been written down in the TX software buffer.
-*  SPI0_txBufferRead - used for the account of the bytes which
+*  SPI_RP_txBufferRead - used for the account of the bytes which
 *  have been read from the TX software buffer.
 *
 * Side Effects:
 *  Clear status register of the component.
 *
 *******************************************************************************/
-uint8  SPI0_GetTxBufferSize(void) 
+uint8  SPI_RP_GetTxBufferSize(void) 
 {
     uint8 size;
 
-    #if(SPI0_TX_SOFTWARE_BUF_ENABLED)
+    #if(SPI_RP_TX_SOFTWARE_BUF_ENABLED)
         /* Disable TX interrupt to protect global veriables */
-        SPI0_DisableTxInt();
+        SPI_RP_DisableTxInt();
 
-        if(SPI0_txBufferRead == SPI0_txBufferWrite)
+        if(SPI_RP_txBufferRead == SPI_RP_txBufferWrite)
         {
             size = 0u;
         }
-        else if(SPI0_txBufferRead < SPI0_txBufferWrite)
+        else if(SPI_RP_txBufferRead < SPI_RP_txBufferWrite)
         {
-            size = (SPI0_txBufferWrite - SPI0_txBufferRead);
+            size = (SPI_RP_txBufferWrite - SPI_RP_txBufferRead);
         }
         else
         {
-            size = (SPI0_TX_BUFFER_SIZE - SPI0_txBufferRead) + SPI0_txBufferWrite;
+            size = (SPI_RP_TX_BUFFER_SIZE - SPI_RP_txBufferRead) + SPI_RP_txBufferWrite;
         }
 
-        SPI0_EnableTxInt();
+        SPI_RP_EnableTxInt();
 
     #else
 
-        size = SPI0_TX_STATUS_REG;
+        size = SPI_RP_TX_STATUS_REG;
 
-        if(0u != (size & SPI0_STS_TX_FIFO_EMPTY))
+        if(0u != (size & SPI_RP_STS_TX_FIFO_EMPTY))
         {
             size = 0u;
         }
-        else if(0u != (size & SPI0_STS_TX_FIFO_NOT_FULL))
+        else if(0u != (size & SPI_RP_STS_TX_FIFO_NOT_FULL))
         {
             size = 1u;
         }
         else
         {
-            size = SPI0_FIFO_SIZE;
+            size = SPI_RP_FIFO_SIZE;
         }
 
-    #endif /* (SPI0_TX_SOFTWARE_BUF_ENABLED) */
+    #endif /* (SPI_RP_TX_SOFTWARE_BUF_ENABLED) */
 
     return(size);
 }
 
 
 /*******************************************************************************
-* Function Name: SPI0_ClearRxBuffer
+* Function Name: SPI_RP_ClearRxBuffer
 ********************************************************************************
 *
 * Summary:
@@ -784,10 +784,10 @@ uint8  SPI0_GetTxBufferSize(void)
 *  None.
 *
 * Global variables:
-*  SPI0_rxBufferWrite - used for the account of the bytes which
+*  SPI_RP_rxBufferWrite - used for the account of the bytes which
 *  have been written down in the RX software buffer, modified every function
 *  call - resets to zero.
-*  SPI0_rxBufferRead - used for the account of the bytes which
+*  SPI_RP_rxBufferRead - used for the account of the bytes which
 *  have been read from the RX software buffer, modified every function call -
 *  resets to zero.
 *
@@ -803,29 +803,29 @@ uint8  SPI0_GetTxBufferSize(void)
 *  No.
 *
 *******************************************************************************/
-void SPI0_ClearRxBuffer(void) 
+void SPI_RP_ClearRxBuffer(void) 
 {
     /* Clear Hardware RX FIFO */
-    while(0u !=(SPI0_RX_STATUS_REG & SPI0_STS_RX_FIFO_NOT_EMPTY))
+    while(0u !=(SPI_RP_RX_STATUS_REG & SPI_RP_STS_RX_FIFO_NOT_EMPTY))
     {
-        (void) CY_GET_REG8(SPI0_RXDATA_PTR);
+        (void) CY_GET_REG8(SPI_RP_RXDATA_PTR);
     }
 
-    #if(SPI0_RX_SOFTWARE_BUF_ENABLED)
+    #if(SPI_RP_RX_SOFTWARE_BUF_ENABLED)
         /* Disable RX interrupt to protect global veriables */
-        SPI0_DisableRxInt();
+        SPI_RP_DisableRxInt();
 
-        SPI0_rxBufferFull  = 0u;
-        SPI0_rxBufferRead  = 0u;
-        SPI0_rxBufferWrite = 0u;
+        SPI_RP_rxBufferFull  = 0u;
+        SPI_RP_rxBufferRead  = 0u;
+        SPI_RP_rxBufferWrite = 0u;
 
-        SPI0_EnableRxInt();
-    #endif /* (SPI0_RX_SOFTWARE_BUF_ENABLED) */
+        SPI_RP_EnableRxInt();
+    #endif /* (SPI_RP_RX_SOFTWARE_BUF_ENABLED) */
 }
 
 
 /*******************************************************************************
-* Function Name: SPI0_ClearTxBuffer
+* Function Name: SPI_RP_ClearTxBuffer
 ********************************************************************************
 *
 * Summary:
@@ -838,10 +838,10 @@ void SPI0_ClearRxBuffer(void)
 *  None.
 *
 * Global variables:
-*  SPI0_txBufferWrite - used for the account of the bytes which
+*  SPI_RP_txBufferWrite - used for the account of the bytes which
 *  have been written down in the TX software buffer, modified every function
 *  call - resets to zero.
-*  SPI0_txBufferRead - used for the account of the bytes which
+*  SPI_RP_txBufferRead - used for the account of the bytes which
 *  have been read from the TX software buffer, modified every function call -
 *  resets to zero.
 *
@@ -858,41 +858,41 @@ void SPI0_ClearRxBuffer(void)
 *  No.
 *
 *******************************************************************************/
-void SPI0_ClearTxBuffer(void) 
+void SPI_RP_ClearTxBuffer(void) 
 {
     uint8 enableInterrupts;
 
     enableInterrupts = CyEnterCriticalSection();
     /* Clear TX FIFO */
-    SPI0_AUX_CONTROL_DP0_REG |= ((uint8)  SPI0_TX_FIFO_CLR);
-    SPI0_AUX_CONTROL_DP0_REG &= ((uint8) ~SPI0_TX_FIFO_CLR);
+    SPI_RP_AUX_CONTROL_DP0_REG |= ((uint8)  SPI_RP_TX_FIFO_CLR);
+    SPI_RP_AUX_CONTROL_DP0_REG &= ((uint8) ~SPI_RP_TX_FIFO_CLR);
 
-    #if(SPI0_USE_SECOND_DATAPATH)
+    #if(SPI_RP_USE_SECOND_DATAPATH)
         /* Clear TX FIFO for 2nd Datapath */
-        SPI0_AUX_CONTROL_DP1_REG |= ((uint8)  SPI0_TX_FIFO_CLR);
-        SPI0_AUX_CONTROL_DP1_REG &= ((uint8) ~SPI0_TX_FIFO_CLR);
-    #endif /* (SPI0_USE_SECOND_DATAPATH) */
+        SPI_RP_AUX_CONTROL_DP1_REG |= ((uint8)  SPI_RP_TX_FIFO_CLR);
+        SPI_RP_AUX_CONTROL_DP1_REG &= ((uint8) ~SPI_RP_TX_FIFO_CLR);
+    #endif /* (SPI_RP_USE_SECOND_DATAPATH) */
     CyExitCriticalSection(enableInterrupts);
 
-    #if(SPI0_TX_SOFTWARE_BUF_ENABLED)
+    #if(SPI_RP_TX_SOFTWARE_BUF_ENABLED)
         /* Disable TX interrupt to protect global veriables */
-        SPI0_DisableTxInt();
+        SPI_RP_DisableTxInt();
 
-        SPI0_txBufferFull  = 0u;
-        SPI0_txBufferRead  = 0u;
-        SPI0_txBufferWrite = 0u;
+        SPI_RP_txBufferFull  = 0u;
+        SPI_RP_txBufferRead  = 0u;
+        SPI_RP_txBufferWrite = 0u;
 
         /* Buffer is EMPTY: disable TX FIFO NOT FULL interrupt */
-        SPI0_TX_STATUS_MASK_REG &= ((uint8) ~SPI0_STS_TX_FIFO_NOT_FULL);
+        SPI_RP_TX_STATUS_MASK_REG &= ((uint8) ~SPI_RP_STS_TX_FIFO_NOT_FULL);
 
-        SPI0_EnableTxInt();
-    #endif /* (SPI0_TX_SOFTWARE_BUF_ENABLED) */
+        SPI_RP_EnableTxInt();
+    #endif /* (SPI_RP_TX_SOFTWARE_BUF_ENABLED) */
 }
 
 
-#if(0u != SPI0_BIDIRECTIONAL_MODE)
+#if(0u != SPI_RP_BIDIRECTIONAL_MODE)
     /*******************************************************************************
-    * Function Name: SPI0_TxEnable
+    * Function Name: SPI_RP_TxEnable
     ********************************************************************************
     *
     * Summary:
@@ -906,14 +906,14 @@ void SPI0_ClearTxBuffer(void)
     *  None.
     *
     *******************************************************************************/
-    void SPI0_TxEnable(void) 
+    void SPI_RP_TxEnable(void) 
     {
-        SPI0_CONTROL_REG |= SPI0_CTRL_TX_SIGNAL_EN;
+        SPI_RP_CONTROL_REG |= SPI_RP_CTRL_TX_SIGNAL_EN;
     }
 
 
     /*******************************************************************************
-    * Function Name: SPI0_TxDisable
+    * Function Name: SPI_RP_TxDisable
     ********************************************************************************
     *
     * Summary:
@@ -927,16 +927,16 @@ void SPI0_ClearTxBuffer(void)
     *  None.
     *
     *******************************************************************************/
-    void SPI0_TxDisable(void) 
+    void SPI_RP_TxDisable(void) 
     {
-        SPI0_CONTROL_REG &= ((uint8) ~SPI0_CTRL_TX_SIGNAL_EN);
+        SPI_RP_CONTROL_REG &= ((uint8) ~SPI_RP_CTRL_TX_SIGNAL_EN);
     }
 
-#endif /* (0u != SPI0_BIDIRECTIONAL_MODE) */
+#endif /* (0u != SPI_RP_BIDIRECTIONAL_MODE) */
 
 
 /*******************************************************************************
-* Function Name: SPI0_PutArray
+* Function Name: SPI_RP_PutArray
 ********************************************************************************
 *
 * Summary:
@@ -959,7 +959,7 @@ void SPI0_ClearTxBuffer(void)
 *  No.
 *
 *******************************************************************************/
-void SPI0_PutArray(const uint8 buffer[], uint8 byteCount)
+void SPI_RP_PutArray(const uint8 buffer[], uint8 byteCount)
                                                                           
 {
     uint8 bufIndex;
@@ -968,7 +968,7 @@ void SPI0_PutArray(const uint8 buffer[], uint8 byteCount)
 
     while(byteCount > 0u)
     {
-        SPI0_WriteTxData(buffer[bufIndex]);
+        SPI_RP_WriteTxData(buffer[bufIndex]);
         bufIndex++;
         byteCount--;
     }
@@ -976,7 +976,7 @@ void SPI0_PutArray(const uint8 buffer[], uint8 byteCount)
 
 
 /*******************************************************************************
-* Function Name: SPI0_ClearFIFO
+* Function Name: SPI_RP_ClearFIFO
 ********************************************************************************
 *
 * Summary:
@@ -992,26 +992,26 @@ void SPI0_PutArray(const uint8 buffer[], uint8 byteCount)
 *  Clear status register of the component.
 *
 *******************************************************************************/
-void SPI0_ClearFIFO(void) 
+void SPI_RP_ClearFIFO(void) 
 {
     uint8 enableInterrupts;
 
     /* Clear Hardware RX FIFO */
-    while(0u !=(SPI0_RX_STATUS_REG & SPI0_STS_RX_FIFO_NOT_EMPTY))
+    while(0u !=(SPI_RP_RX_STATUS_REG & SPI_RP_STS_RX_FIFO_NOT_EMPTY))
     {
-        (void) CY_GET_REG8(SPI0_RXDATA_PTR);
+        (void) CY_GET_REG8(SPI_RP_RXDATA_PTR);
     }
 
     enableInterrupts = CyEnterCriticalSection();
     /* Clear TX FIFO */
-    SPI0_AUX_CONTROL_DP0_REG |= ((uint8)  SPI0_TX_FIFO_CLR);
-    SPI0_AUX_CONTROL_DP0_REG &= ((uint8) ~SPI0_TX_FIFO_CLR);
+    SPI_RP_AUX_CONTROL_DP0_REG |= ((uint8)  SPI_RP_TX_FIFO_CLR);
+    SPI_RP_AUX_CONTROL_DP0_REG &= ((uint8) ~SPI_RP_TX_FIFO_CLR);
 
-    #if(SPI0_USE_SECOND_DATAPATH)
+    #if(SPI_RP_USE_SECOND_DATAPATH)
         /* Clear TX FIFO for 2nd Datapath */
-        SPI0_AUX_CONTROL_DP1_REG |= ((uint8)  SPI0_TX_FIFO_CLR);
-        SPI0_AUX_CONTROL_DP1_REG &= ((uint8) ~SPI0_TX_FIFO_CLR);
-    #endif /* (SPI0_USE_SECOND_DATAPATH) */
+        SPI_RP_AUX_CONTROL_DP1_REG |= ((uint8)  SPI_RP_TX_FIFO_CLR);
+        SPI_RP_AUX_CONTROL_DP1_REG &= ((uint8) ~SPI_RP_TX_FIFO_CLR);
+    #endif /* (SPI_RP_USE_SECOND_DATAPATH) */
     CyExitCriticalSection(enableInterrupts);
 }
 
@@ -1022,7 +1022,7 @@ void SPI0_ClearFIFO(void)
 
 
 /*******************************************************************************
-* Function Name: SPI0_EnableInt
+* Function Name: SPI_RP_EnableInt
 ********************************************************************************
 *
 * Summary:
@@ -1038,15 +1038,15 @@ void SPI0_ClearFIFO(void)
 *  Enable the internal interrupt output -or- the interrupt component itself.
 *
 *******************************************************************************/
-void SPI0_EnableInt(void) 
+void SPI_RP_EnableInt(void) 
 {
-    SPI0_EnableRxInt();
-    SPI0_EnableTxInt();
+    SPI_RP_EnableRxInt();
+    SPI_RP_EnableTxInt();
 }
 
 
 /*******************************************************************************
-* Function Name: SPI0_DisableInt
+* Function Name: SPI_RP_DisableInt
 ********************************************************************************
 *
 * Summary:
@@ -1062,15 +1062,15 @@ void SPI0_EnableInt(void)
 *  Disable the internal interrupt output -or- the interrupt component itself.
 *
 *******************************************************************************/
-void SPI0_DisableInt(void) 
+void SPI_RP_DisableInt(void) 
 {
-    SPI0_DisableTxInt();
-    SPI0_DisableRxInt();
+    SPI_RP_DisableTxInt();
+    SPI_RP_DisableRxInt();
 }
 
 
 /*******************************************************************************
-* Function Name: SPI0_SetInterruptMode
+* Function Name: SPI_RP_SetInterruptMode
 ********************************************************************************
 *
 * Summary:
@@ -1087,15 +1087,15 @@ void SPI0_DisableInt(void)
 *  Enables the output of specific status bits to the interrupt controller.
 *
 *******************************************************************************/
-void SPI0_SetInterruptMode(uint8 intSrc) 
+void SPI_RP_SetInterruptMode(uint8 intSrc) 
 {
-    SPI0_TX_STATUS_MASK_REG  = (intSrc & ((uint8) ~SPI0_STS_SPI_IDLE));
-    SPI0_RX_STATUS_MASK_REG  =  intSrc;
+    SPI_RP_TX_STATUS_MASK_REG  = (intSrc & ((uint8) ~SPI_RP_STS_SPI_IDLE));
+    SPI_RP_RX_STATUS_MASK_REG  =  intSrc;
 }
 
 
 /*******************************************************************************
-* Function Name: SPI0_ReadStatus
+* Function Name: SPI_RP_ReadStatus
 ********************************************************************************
 *
 * Summary:
@@ -1108,7 +1108,7 @@ void SPI0_SetInterruptMode(uint8 intSrc)
 *  Contents of the status register.
 *
 * Global variables:
-*  SPI0_swStatus - used to store in software status register,
+*  SPI_RP_swStatus - used to store in software status register,
 *  modified every function call - resets to zero.
 *
 * Theory:
@@ -1122,30 +1122,30 @@ void SPI0_SetInterruptMode(uint8 intSrc)
 *  No.
 *
 *******************************************************************************/
-uint8 SPI0_ReadStatus(void) 
+uint8 SPI_RP_ReadStatus(void) 
 {
     uint8 tmpStatus;
 
-    #if(SPI0_TX_SOFTWARE_BUF_ENABLED || SPI0_RX_SOFTWARE_BUF_ENABLED)
+    #if(SPI_RP_TX_SOFTWARE_BUF_ENABLED || SPI_RP_RX_SOFTWARE_BUF_ENABLED)
 
-        SPI0_DisableInt();
+        SPI_RP_DisableInt();
 
-        tmpStatus  = SPI0_GET_STATUS_RX(SPI0_swStatusRx);
-        tmpStatus |= SPI0_GET_STATUS_TX(SPI0_swStatusTx);
-        tmpStatus &= ((uint8) ~SPI0_STS_SPI_IDLE);
+        tmpStatus  = SPI_RP_GET_STATUS_RX(SPI_RP_swStatusRx);
+        tmpStatus |= SPI_RP_GET_STATUS_TX(SPI_RP_swStatusTx);
+        tmpStatus &= ((uint8) ~SPI_RP_STS_SPI_IDLE);
 
-        SPI0_swStatusTx = 0u;
-        SPI0_swStatusRx = 0u;
+        SPI_RP_swStatusTx = 0u;
+        SPI_RP_swStatusRx = 0u;
 
-        SPI0_EnableInt();
+        SPI_RP_EnableInt();
 
     #else
 
-        tmpStatus  = SPI0_RX_STATUS_REG;
-        tmpStatus |= SPI0_TX_STATUS_REG;
-        tmpStatus &= ((uint8) ~SPI0_STS_SPI_IDLE);
+        tmpStatus  = SPI_RP_RX_STATUS_REG;
+        tmpStatus |= SPI_RP_TX_STATUS_REG;
+        tmpStatus &= ((uint8) ~SPI_RP_STS_SPI_IDLE);
 
-    #endif /* (SPI0_TX_SOFTWARE_BUF_ENABLED || SPI0_RX_SOFTWARE_BUF_ENABLED) */
+    #endif /* (SPI_RP_TX_SOFTWARE_BUF_ENABLED || SPI_RP_RX_SOFTWARE_BUF_ENABLED) */
 
     return(tmpStatus);
 }
