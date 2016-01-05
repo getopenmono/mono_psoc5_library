@@ -1,5 +1,5 @@
 /*******************************************************************************
-* File Name: act8600_i2c_clk.c  
+* File Name: act_i2c_clk.c  
 * Version 2.10
 *
 * Description:
@@ -15,15 +15,15 @@
 *******************************************************************************/
 
 #include "cytypes.h"
-#include "act8600_i2c_clk.h"
+#include "act_i2c_clk.h"
 
 /* APIs are not generated for P15[7:6] on PSoC 5 */
 #if !(CY_PSOC5A &&\
-	 act8600_i2c_clk__PORT == 15 && ((act8600_i2c_clk__MASK & 0xC0) != 0))
+	 act_i2c_clk__PORT == 15 && ((act_i2c_clk__MASK & 0xC0) != 0))
 
 
 /*******************************************************************************
-* Function Name: act8600_i2c_clk_Write
+* Function Name: act_i2c_clk_Write
 ********************************************************************************
 *
 * Summary:
@@ -36,15 +36,15 @@
 *  None
 *  
 *******************************************************************************/
-void act8600_i2c_clk_Write(uint8 value) 
+void act_i2c_clk_Write(uint8 value) 
 {
-    uint8 staticBits = (act8600_i2c_clk_DR & (uint8)(~act8600_i2c_clk_MASK));
-    act8600_i2c_clk_DR = staticBits | ((uint8)(value << act8600_i2c_clk_SHIFT) & act8600_i2c_clk_MASK);
+    uint8 staticBits = (act_i2c_clk_DR & (uint8)(~act_i2c_clk_MASK));
+    act_i2c_clk_DR = staticBits | ((uint8)(value << act_i2c_clk_SHIFT) & act_i2c_clk_MASK);
 }
 
 
 /*******************************************************************************
-* Function Name: act8600_i2c_clk_SetDriveMode
+* Function Name: act_i2c_clk_SetDriveMode
 ********************************************************************************
 *
 * Summary:
@@ -53,27 +53,27 @@ void act8600_i2c_clk_Write(uint8 value)
 * Parameters:  
 *  mode:  Change the pins to one of the following drive modes.
 *
-*  act8600_i2c_clk_DM_STRONG     Strong Drive 
-*  act8600_i2c_clk_DM_OD_HI      Open Drain, Drives High 
-*  act8600_i2c_clk_DM_OD_LO      Open Drain, Drives Low 
-*  act8600_i2c_clk_DM_RES_UP     Resistive Pull Up 
-*  act8600_i2c_clk_DM_RES_DWN    Resistive Pull Down 
-*  act8600_i2c_clk_DM_RES_UPDWN  Resistive Pull Up/Down 
-*  act8600_i2c_clk_DM_DIG_HIZ    High Impedance Digital 
-*  act8600_i2c_clk_DM_ALG_HIZ    High Impedance Analog 
+*  act_i2c_clk_DM_STRONG     Strong Drive 
+*  act_i2c_clk_DM_OD_HI      Open Drain, Drives High 
+*  act_i2c_clk_DM_OD_LO      Open Drain, Drives Low 
+*  act_i2c_clk_DM_RES_UP     Resistive Pull Up 
+*  act_i2c_clk_DM_RES_DWN    Resistive Pull Down 
+*  act_i2c_clk_DM_RES_UPDWN  Resistive Pull Up/Down 
+*  act_i2c_clk_DM_DIG_HIZ    High Impedance Digital 
+*  act_i2c_clk_DM_ALG_HIZ    High Impedance Analog 
 *
 * Return: 
 *  None
 *
 *******************************************************************************/
-void act8600_i2c_clk_SetDriveMode(uint8 mode) 
+void act_i2c_clk_SetDriveMode(uint8 mode) 
 {
-	CyPins_SetPinDriveMode(act8600_i2c_clk_0, mode);
+	CyPins_SetPinDriveMode(act_i2c_clk_0, mode);
 }
 
 
 /*******************************************************************************
-* Function Name: act8600_i2c_clk_Read
+* Function Name: act_i2c_clk_Read
 ********************************************************************************
 *
 * Summary:
@@ -87,17 +87,17 @@ void act8600_i2c_clk_SetDriveMode(uint8 mode)
 *  Returns the current value of the Digital Port as a right justified number
 *  
 * Note:
-*  Macro act8600_i2c_clk_ReadPS calls this function. 
+*  Macro act_i2c_clk_ReadPS calls this function. 
 *  
 *******************************************************************************/
-uint8 act8600_i2c_clk_Read(void) 
+uint8 act_i2c_clk_Read(void) 
 {
-    return (act8600_i2c_clk_PS & act8600_i2c_clk_MASK) >> act8600_i2c_clk_SHIFT;
+    return (act_i2c_clk_PS & act_i2c_clk_MASK) >> act_i2c_clk_SHIFT;
 }
 
 
 /*******************************************************************************
-* Function Name: act8600_i2c_clk_ReadDataReg
+* Function Name: act_i2c_clk_ReadDataReg
 ********************************************************************************
 *
 * Summary:
@@ -110,17 +110,17 @@ uint8 act8600_i2c_clk_Read(void)
 *  Returns the current value assigned to the Digital Port's data output register
 *  
 *******************************************************************************/
-uint8 act8600_i2c_clk_ReadDataReg(void) 
+uint8 act_i2c_clk_ReadDataReg(void) 
 {
-    return (act8600_i2c_clk_DR & act8600_i2c_clk_MASK) >> act8600_i2c_clk_SHIFT;
+    return (act_i2c_clk_DR & act_i2c_clk_MASK) >> act_i2c_clk_SHIFT;
 }
 
 
 /* If Interrupts Are Enabled for this Pins component */ 
-#if defined(act8600_i2c_clk_INTSTAT) 
+#if defined(act_i2c_clk_INTSTAT) 
 
     /*******************************************************************************
-    * Function Name: act8600_i2c_clk_ClearInterrupt
+    * Function Name: act_i2c_clk_ClearInterrupt
     ********************************************************************************
     * Summary:
     *  Clears any active interrupts attached to port and returns the value of the 
@@ -133,9 +133,9 @@ uint8 act8600_i2c_clk_ReadDataReg(void)
     *  Returns the value of the interrupt status register
     *  
     *******************************************************************************/
-    uint8 act8600_i2c_clk_ClearInterrupt(void) 
+    uint8 act_i2c_clk_ClearInterrupt(void) 
     {
-        return (act8600_i2c_clk_INTSTAT & act8600_i2c_clk_MASK) >> act8600_i2c_clk_SHIFT;
+        return (act_i2c_clk_INTSTAT & act_i2c_clk_MASK) >> act_i2c_clk_SHIFT;
     }
 
 #endif /* If Interrupts Are Enabled for this Pins component */ 
