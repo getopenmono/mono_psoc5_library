@@ -69,6 +69,8 @@
 #include "SD_MISO.h"
 #include "act_i2c_sda_aliases.h"
 #include "act_i2c_sda.h"
+#include "TFT_CS_aliases.h"
+#include "TFT_CS.h"
 #include "USBUART_Dm_aliases.h"
 #include "USBUART_Dm.h"
 #include "USBUART_Dp_aliases.h"
