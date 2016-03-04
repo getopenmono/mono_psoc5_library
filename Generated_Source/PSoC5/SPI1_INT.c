@@ -83,7 +83,7 @@ CY_ISR(SPI1_TX_ISR)
                 }
 
                 /* Put data element into the TX FIFO */
-                CY_SET_REG8(SPI1_TXDATA_PTR, 
+                CY_SET_REG16(SPI1_TXDATA_PTR, 
                                              SPI1_txBuffer[SPI1_txBufferRead]);
             }
             else
@@ -135,7 +135,7 @@ CY_ISR(SPI1_RX_ISR)
 {
     #if(SPI1_RX_SOFTWARE_BUF_ENABLED)
         uint8 tmpStatus;
-        uint8 rxData;
+        uint16 rxData;
     #endif /* (SPI1_RX_SOFTWARE_BUF_ENABLED) */
 
     /* User code required at start of ISR */
@@ -151,7 +151,7 @@ CY_ISR(SPI1_RX_ISR)
         /* Check if RX data FIFO has some data to be moved into the RX Buffer */
         while(0u != (SPI1_swStatusRx & SPI1_STS_RX_FIFO_NOT_EMPTY))
         {
-            rxData = CY_GET_REG8(SPI1_RXDATA_PTR);
+            rxData = CY_GET_REG16(SPI1_RXDATA_PTR);
 
             /* Set next pointer. */
             SPI1_rxBufferWrite++;

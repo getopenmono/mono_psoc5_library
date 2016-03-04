@@ -34,14 +34,14 @@ extern volatile uint8 SPI1_swStatusTx;
 extern volatile uint8 SPI1_swStatusRx;
 
 #if(SPI1_TX_SOFTWARE_BUF_ENABLED)
-    extern volatile uint8 SPI1_txBuffer[SPI1_TX_BUFFER_SIZE];
+    extern volatile uint16 SPI1_txBuffer[SPI1_TX_BUFFER_SIZE];
     extern volatile uint8 SPI1_txBufferRead;
     extern volatile uint8 SPI1_txBufferWrite;
     extern volatile uint8 SPI1_txBufferFull;
 #endif /* (SPI1_TX_SOFTWARE_BUF_ENABLED) */
 
 #if(SPI1_RX_SOFTWARE_BUF_ENABLED)
-    extern volatile uint8 SPI1_rxBuffer[SPI1_RX_BUFFER_SIZE];
+    extern volatile uint16 SPI1_rxBuffer[SPI1_RX_BUFFER_SIZE];
     extern volatile uint8 SPI1_rxBufferRead;
     extern volatile uint8 SPI1_rxBufferWrite;
     extern volatile uint8 SPI1_rxBufferFull;

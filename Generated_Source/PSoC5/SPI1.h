@@ -41,7 +41,7 @@
 #endif /* (0u != SPI1_INTERNAL_CLOCK) */
 
 #define SPI1_MODE                       (1u)
-#define SPI1_DATA_WIDTH                 (8u)
+#define SPI1_DATA_WIDTH                 (9u)
 #define SPI1_MODE_USE_ZERO              (1u)
 #define SPI1_BIDIRECTIONAL_MODE         (0u)
 
@@ -97,16 +97,16 @@ void  SPI1_SetTxInterruptMode(uint8 intSrc)     ;
 void  SPI1_SetRxInterruptMode(uint8 intSrc)     ;
 uint8 SPI1_ReadTxStatus(void)                   ;
 uint8 SPI1_ReadRxStatus(void)                   ;
-void  SPI1_WriteTxData(uint8 txData)  \
+void  SPI1_WriteTxData(uint16 txData)  \
                                                             ;
-uint8 SPI1_ReadRxData(void) \
+uint16 SPI1_ReadRxData(void) \
                                                             ;
 uint8 SPI1_GetRxBufferSize(void)                ;
 uint8 SPI1_GetTxBufferSize(void)                ;
 void  SPI1_ClearRxBuffer(void)                  ;
 void  SPI1_ClearTxBuffer(void)                  ;
 void  SPI1_ClearFIFO(void)                              ;
-void  SPI1_PutArray(const uint8 buffer[], uint8 byteCount) \
+void  SPI1_PutArray(const uint16 buffer[], uint8 byteCount) \
                                                             ;
 
 #if(0u != SPI1_BIDIRECTIONAL_MODE)
@@ -177,46 +177,46 @@ extern uint8 SPI1_initVar;
 *             Registers
 ***************************************/
 #if(CY_PSOC3 || CY_PSOC5)
-    #define SPI1_TXDATA_REG (* (reg8 *) \
-                                                SPI1_BSPIM_sR8_Dp_u0__F0_REG)
-    #define SPI1_TXDATA_PTR (  (reg8 *) \
-                                                SPI1_BSPIM_sR8_Dp_u0__F0_REG)
-    #define SPI1_RXDATA_REG (* (reg8 *) \
-                                                SPI1_BSPIM_sR8_Dp_u0__F1_REG)
-    #define SPI1_RXDATA_PTR (  (reg8 *) \
-                                                SPI1_BSPIM_sR8_Dp_u0__F1_REG)
+    #define SPI1_TXDATA_REG (* (reg16 *) \
+                                                SPI1_BSPIM_sR16_Dp_u0__F0_REG)
+    #define SPI1_TXDATA_PTR (  (reg16 *) \
+                                                SPI1_BSPIM_sR16_Dp_u0__F0_REG)
+    #define SPI1_RXDATA_REG (* (reg16 *) \
+                                                SPI1_BSPIM_sR16_Dp_u0__F1_REG)
+    #define SPI1_RXDATA_PTR (  (reg16 *) \
+                                                SPI1_BSPIM_sR16_Dp_u0__F1_REG)
 #else   /* PSOC4 */
     #if(SPI1_USE_SECOND_DATAPATH)
         #define SPI1_TXDATA_REG (* (reg16 *) \
-                                          SPI1_BSPIM_sR8_Dp_u0__16BIT_F0_REG)
+                                          SPI1_BSPIM_sR16_Dp_u0__16BIT_F0_REG)
         #define SPI1_TXDATA_PTR (  (reg16 *) \
-                                          SPI1_BSPIM_sR8_Dp_u0__16BIT_F0_REG)
+                                          SPI1_BSPIM_sR16_Dp_u0__16BIT_F0_REG)
         #define SPI1_RXDATA_REG (* (reg16 *) \
-                                          SPI1_BSPIM_sR8_Dp_u0__16BIT_F1_REG)
+                                          SPI1_BSPIM_sR16_Dp_u0__16BIT_F1_REG)
         #define SPI1_RXDATA_PTR (  (reg16 *) \
-                                          SPI1_BSPIM_sR8_Dp_u0__16BIT_F1_REG)
+                                          SPI1_BSPIM_sR16_Dp_u0__16BIT_F1_REG)
     #else
         #define SPI1_TXDATA_REG (* (reg8 *) \
-                                                SPI1_BSPIM_sR8_Dp_u0__F0_REG)
+                                                SPI1_BSPIM_sR16_Dp_u0__F0_REG)
         #define SPI1_TXDATA_PTR (  (reg8 *) \
-                                                SPI1_BSPIM_sR8_Dp_u0__F0_REG)
+                                                SPI1_BSPIM_sR16_Dp_u0__F0_REG)
         #define SPI1_RXDATA_REG (* (reg8 *) \
-                                                SPI1_BSPIM_sR8_Dp_u0__F1_REG)
+                                                SPI1_BSPIM_sR16_Dp_u0__F1_REG)
         #define SPI1_RXDATA_PTR (  (reg8 *) \
-                                                SPI1_BSPIM_sR8_Dp_u0__F1_REG)
+                                                SPI1_BSPIM_sR16_Dp_u0__F1_REG)
     #endif /* (SPI1_USE_SECOND_DATAPATH) */
 #endif     /* (CY_PSOC3 || CY_PSOC5) */
 
 #define SPI1_AUX_CONTROL_DP0_REG (* (reg8 *) \
-                                        SPI1_BSPIM_sR8_Dp_u0__DP_AUX_CTL_REG)
+                                        SPI1_BSPIM_sR16_Dp_u0__DP_AUX_CTL_REG)
 #define SPI1_AUX_CONTROL_DP0_PTR (  (reg8 *) \
-                                        SPI1_BSPIM_sR8_Dp_u0__DP_AUX_CTL_REG)
+                                        SPI1_BSPIM_sR16_Dp_u0__DP_AUX_CTL_REG)
 
 #if(SPI1_USE_SECOND_DATAPATH)
     #define SPI1_AUX_CONTROL_DP1_REG  (* (reg8 *) \
-                                        SPI1_BSPIM_sR8_Dp_u1__DP_AUX_CTL_REG)
+                                        SPI1_BSPIM_sR16_Dp_u1__DP_AUX_CTL_REG)
     #define SPI1_AUX_CONTROL_DP1_PTR  (  (reg8 *) \
-                                        SPI1_BSPIM_sR8_Dp_u1__DP_AUX_CTL_REG)
+                                        SPI1_BSPIM_sR16_Dp_u1__DP_AUX_CTL_REG)
 #endif /* (SPI1_USE_SECOND_DATAPATH) */
 
 #define SPI1_COUNTER_PERIOD_REG     (* (reg8 *) SPI1_BSPIM_BitCounter__PERIOD_REG)

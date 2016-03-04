@@ -18,14 +18,14 @@
 #include "SPI1_PVT.h"
 
 #if(SPI1_TX_SOFTWARE_BUF_ENABLED)
-    volatile uint8 SPI1_txBuffer[SPI1_TX_BUFFER_SIZE];
+    volatile uint16 SPI1_txBuffer[SPI1_TX_BUFFER_SIZE];
     volatile uint8 SPI1_txBufferFull;
     volatile uint8 SPI1_txBufferRead;
     volatile uint8 SPI1_txBufferWrite;
 #endif /* (SPI1_TX_SOFTWARE_BUF_ENABLED) */
 
 #if(SPI1_RX_SOFTWARE_BUF_ENABLED)
-    volatile uint8 SPI1_rxBuffer[SPI1_RX_BUFFER_SIZE];
+    volatile uint16 SPI1_rxBuffer[SPI1_RX_BUFFER_SIZE];
     volatile uint8 SPI1_rxBufferFull;
     volatile uint8 SPI1_rxBufferRead;
     volatile uint8 SPI1_rxBufferWrite;
@@ -491,7 +491,7 @@ uint8 SPI1_ReadRxStatus(void)
 *  No.
 *
 *******************************************************************************/
-void SPI1_WriteTxData(uint8 txData) 
+void SPI1_WriteTxData(uint16 txData) 
 {
     #if(SPI1_TX_SOFTWARE_BUF_ENABLED)
 
@@ -524,7 +524,7 @@ void SPI1_WriteTxData(uint8 txData)
            (0u != (SPI1_swStatusTx & SPI1_STS_TX_FIFO_NOT_FULL)))
         {
             /* Put data element into the TX FIFO */
-            CY_SET_REG8(SPI1_TXDATA_PTR, txData);
+            CY_SET_REG16(SPI1_TXDATA_PTR, txData);
         }
         else
         {
@@ -559,7 +559,7 @@ void SPI1_WriteTxData(uint8 txData)
         }
 
         /* Put data element into the TX FIFO */
-        CY_SET_REG8(SPI1_TXDATA_PTR, txData);
+        CY_SET_REG16(SPI1_TXDATA_PTR, txData);
 
     #endif /* (SPI1_TX_SOFTWARE_BUF_ENABLED) */
 }
@@ -599,9 +599,9 @@ void SPI1_WriteTxData(uint8 txData)
 *  No.
 *
 *******************************************************************************/
-uint8 SPI1_ReadRxData(void) 
+uint16 SPI1_ReadRxData(void) 
 {
-    uint8 rxData;
+    uint16 rxData;
 
     #if(SPI1_RX_SOFTWARE_BUF_ENABLED)
 
@@ -630,7 +630,7 @@ uint8 SPI1_ReadRxData(void)
 
     #else
 
-        rxData = CY_GET_REG8(SPI1_RXDATA_PTR);
+        rxData = CY_GET_REG16(SPI1_RXDATA_PTR);
 
     #endif /* (SPI1_RX_SOFTWARE_BUF_ENABLED) */
 
@@ -808,7 +808,7 @@ void SPI1_ClearRxBuffer(void)
     /* Clear Hardware RX FIFO */
     while(0u !=(SPI1_RX_STATUS_REG & SPI1_STS_RX_FIFO_NOT_EMPTY))
     {
-        (void) CY_GET_REG8(SPI1_RXDATA_PTR);
+        (void) CY_GET_REG16(SPI1_RXDATA_PTR);
     }
 
     #if(SPI1_RX_SOFTWARE_BUF_ENABLED)
@@ -959,7 +959,7 @@ void SPI1_ClearTxBuffer(void)
 *  No.
 *
 *******************************************************************************/
-void SPI1_PutArray(const uint8 buffer[], uint8 byteCount)
+void SPI1_PutArray(const uint16 buffer[], uint8 byteCount)
                                                                           
 {
     uint8 bufIndex;
@@ -999,7 +999,7 @@ void SPI1_ClearFIFO(void)
     /* Clear Hardware RX FIFO */
     while(0u !=(SPI1_RX_STATUS_REG & SPI1_STS_RX_FIFO_NOT_EMPTY))
     {
-        (void) CY_GET_REG8(SPI1_RXDATA_PTR);
+        (void) CY_GET_REG16(SPI1_RXDATA_PTR);
     }
 
     enableInterrupts = CyEnterCriticalSection();
