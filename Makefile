@@ -1,5 +1,5 @@
 TARGET = mono_project
-ARCH="/usr/local/gcc-arm-none-eabi-4_8/bin/arm-none-eabi-"
+ARCH="/usr/local/gcc-arm-none-eabi-5_2-2015q4/bin/arm-none-eabi-"
 FLASH_SIZE=262144
 FLASH_ROW_SIZE=256
 FLASH_ARRAY_SIZE=65536
