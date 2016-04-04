@@ -16,6 +16,7 @@
 #include "RTC.h"
 #include "CyLib.h"
 
+
 /* Function Prototypes */
 static void RTC_EverySecondHandler(void);
 static void RTC_EveryMinuteHandler(void);
@@ -54,6 +55,10 @@ static void RTC_EverySecondHandler(void)
     /* `#START EVERY_SECOND_HANDLER_CODE` */
 
     /* `#END` */
+    
+    #ifdef RTC_EVERY_SECOND_HANDLER_CALLBACK
+        RTC_EverySecondHandler_Callback();
+    #endif /* RTC_EVERY_SECOND_HANDLER_CALLBACK */
 }
 
 
@@ -77,6 +82,10 @@ static void RTC_EveryMinuteHandler(void)
     /* `#START EVERY_MINUTE_HANDLER_CODE` */
 
     /* `#END` */
+
+    #ifdef RTC_EVERY_MINUTE_HANDLER_CALLBACK
+        RTC_EveryMinuteHandler_Callback();
+    #endif /* RTC_EVERY_MINUTE_HANDLER_CALLBACK */    
 }
 
 
@@ -100,6 +109,10 @@ static void RTC_EveryHourHandler(void)
     /* `#START EVERY_HOUR_HANDLER_CODE` */
 
     /* `#END` */
+    
+    #ifdef RTC_EVERY_HOUR_HANDLER_CALLBACK
+        RTC_EveryHourHandler_Callback();
+    #endif /* RTC_EVERY_HOUR_HANDLER_CALLBACK */
 }
 
 
@@ -123,6 +136,10 @@ static void RTC_EveryDayHandler(void)
     /* `#START EVERY_DAY_HANDLER_CODE` */
 
     /* `#END` */
+    
+    #ifdef RTC_EVERY_DAY_HANDLER_CALLBACK
+        RTC_EveryDayHandler_Callback();
+    #endif /* RTC_EVERY_DAY_HANDLER_CALLBACK */
 }
 
 
@@ -146,6 +163,10 @@ static void RTC_EveryWeekHandler(void)
     /* `#START EVERY_WEEK_HANDLER_CODE` */
 
     /* `#END` */
+
+    #ifdef RTC_EVERY_WEEK_HANDLER_CALLBACK
+        RTC_EveryWeekHandler_Callback();
+    #endif /* RTC_EVERY_WEEK_HANDLER_CALLBACK */
 }
 
 
@@ -169,6 +190,10 @@ static void RTC_EveryMonthHandler(void)
     /* `#START EVERY_MONTH_HANDLER_CODE` */
 
     /* `#END` */
+    
+    #ifdef RTC_EVERY_MONTH_HANDLER_CALLBACK
+        RTC_EveryMonthHandler_Callback();
+    #endif /* RTC_EVERY_MONTH_HANDLER_CALLBACK */
 }
 
 
@@ -192,6 +217,10 @@ static void RTC_EveryYearHandler(void)
     /* `#START EVERY_YEAR_HANDLER_CODE` */
 
     /* `#END` */
+
+    #ifdef RTC_EVERY_YEAR_HANDLER_CALLBACK
+        RTC_EveryYearHandler_Callback();
+    #endif /* RTC_EVERY_YEAR_HANDLER_CALLBACK */    
 }
 
 
@@ -237,6 +266,10 @@ CY_ISR(RTC_ISR)
 {
     uint8 RTC_tmp;
 
+    #ifdef RTC_ISR_ENTRY_CALLBACK
+        RTC_ISR_EntryCallback();
+    #endif /* RTC_ISR_ENTRY_CALLBACK */
+    
     /* Clear OPPS interrupt status flag */
     (void) CyPmReadStatus(CY_PM_ONEPPS_INT);
 
@@ -914,7 +947,10 @@ CY_ISR(RTC_ISR)
     {
         RTC_EverySecondHandler();
     }
-
+    
+    #ifdef RTC_ISR_EXIT_CALLBACK
+        RTC_ISR_ExitCallback();
+    #endif /* RTC_ISR_EXIT_CALLBACK */
 }
 
 

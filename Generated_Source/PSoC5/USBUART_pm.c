@@ -19,6 +19,7 @@
 #include "USBUART_pvt.h"
 
 
+
 /***************************************
 * Custom Declarations
 ***************************************/
@@ -53,12 +54,20 @@ static USBUART_BACKUP_STRUCT  USBUART_backup;
     *******************************************************************************/
     CY_ISR(USBUART_DP_ISR)
     {
+        #ifdef USBUART_DP_ISR_ENTRY_CALLBACK
+            USBUART_DP_ISR_EntryCallback();
+        #endif /* USBUART_DP_ISR_ENTRY_CALLBACK */
+
         /* `#START DP_USER_CODE` Place your code here */
 
         /* `#END` */
 
         /* Clears active interrupt */
         CY_GET_REG8(USBUART_DP_INTSTAT_PTR);
+
+        #ifdef USBUART_DP_ISR_EXIT_CALLBACK
+            USBUART_DP_ISR_ExitCallback();
+        #endif /* USBUART_DP_ISR_EXIT_CALLBACK */
     }
 
 #endif /* (USBUART_DP_ISR_REMOVE == 0u) */

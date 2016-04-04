@@ -18,6 +18,7 @@
 #include "ADC_SAR_1.h"
 
 
+
 /******************************************************************************
 * Custom Declarations and Variables
 * - add user inlcude files, prototypes and variables between the following
@@ -26,7 +27,6 @@
 /* `#START ADC_SYS_VAR`  */
 
 /* `#END`  */
-
 
 #if(ADC_SAR_1_IRQ_REMOVE == 0u)
 
@@ -50,6 +50,11 @@
     ******************************************************************************/
     CY_ISR( ADC_SAR_1_ISR )
     {
+        #ifdef ADC_SAR_1_ISR_INTERRUPT_CALLBACK
+            ADC_SAR_1_ISR_InterruptCallback();
+        #endif /* ADC_SAR_1_ISR_INTERRUPT_CALLBACK */          
+
+        
         /************************************************************************
         *  Custom Code
         *  - add user ISR code between the following #START and #END tags
@@ -57,7 +62,6 @@
           /* `#START MAIN_ADC_ISR`  */
 
           /* `#END`  */
-
     }
 
 #endif   /* End ADC_SAR_1_IRQ_REMOVE */

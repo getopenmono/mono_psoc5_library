@@ -18,6 +18,7 @@
 
 #include "SPI1_PVT.h"
 
+
 /* User code required at start of ISR */
 /* `#START SPI1_ISR_START_DEF` */
 
@@ -54,11 +55,15 @@ CY_ISR(SPI1_TX_ISR)
         uint8 tmpStatus;
     #endif /* (SPI1_TX_SOFTWARE_BUF_ENABLED) */
 
+    #ifdef SPI1_TX_ISR_ENTRY_CALLBACK
+        SPI1_TX_ISR_EntryCallback();
+    #endif /* SPI1_TX_ISR_ENTRY_CALLBACK */
+
     /* User code required at start of ISR */
     /* `#START SPI1_TX_ISR_START` */
 
     /* `#END` */
-
+    
     #if(SPI1_TX_SOFTWARE_BUF_ENABLED)
         /* Check if TX data buffer is not empty and there is space in TX FIFO */
         while(SPI1_txBufferRead != SPI1_txBufferWrite)
@@ -104,6 +109,10 @@ CY_ISR(SPI1_TX_ISR)
     /* `#START SPI1_TX_ISR_END` */
 
     /* `#END` */
+    
+    #ifdef SPI1_TX_ISR_EXIT_CALLBACK
+        SPI1_TX_ISR_ExitCallback();
+    #endif /* SPI1_TX_ISR_EXIT_CALLBACK */
 }
 
 
@@ -138,11 +147,15 @@ CY_ISR(SPI1_RX_ISR)
         uint16 rxData;
     #endif /* (SPI1_RX_SOFTWARE_BUF_ENABLED) */
 
+    #ifdef SPI1_RX_ISR_ENTRY_CALLBACK
+        SPI1_RX_ISR_EntryCallback();
+    #endif /* SPI1_RX_ISR_ENTRY_CALLBACK */
+
     /* User code required at start of ISR */
     /* `#START SPI1_RX_ISR_START` */
 
     /* `#END` */
-
+    
     #if(SPI1_RX_SOFTWARE_BUF_ENABLED)
 
         tmpStatus = SPI1_GET_STATUS_RX(SPI1_swStatusRx);
@@ -184,6 +197,10 @@ CY_ISR(SPI1_RX_ISR)
     /* `#START SPI1_RX_ISR_END` */
 
     /* `#END` */
+    
+    #ifdef SPI1_RX_ISR_EXIT_CALLBACK
+        SPI1_RX_ISR_ExitCallback();
+    #endif /* SPI1_RX_ISR_EXIT_CALLBACK */
 }
 
 /* [] END OF FILE */

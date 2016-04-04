@@ -26,6 +26,7 @@
 #include "USBUART_pvt.h"
 
 
+
 /***************************************
 *    MIDI Constants
 ***************************************/
@@ -269,6 +270,10 @@ void USBUART_MIDI_EP_Init(void)
                             /* `#START CUSTOM_MIDI_OUT_EP_SERV` Place your code here */
 
                             /* `#END` */
+
+                            #ifdef USBUART_MIDI_OUT_EP_SERVICE_CALLBACK
+                                USBUART_MIDI_OUT_EP_Service_Callback();
+                            #endif /* USBUART_MIDI_OUT_EP_SERVICE_CALLBACK */
                         }
                     #endif /* (USBUART_MIDI_EXT_MODE >= USBUART_ONE_EXT_INTRF) */
 
@@ -732,6 +737,9 @@ void USBUART_MIDI_EP_Init(void)
 
         /* `#END` */
 
+        #ifdef USBUART_MIDI_INIT_CALLBACK
+            USBUART_MIDI_Init_Callback();
+        #endif /* USBUART_MIDI_INIT_CALLBACK */
     }
 
 
@@ -1046,6 +1054,10 @@ void USBUART_MIDI_EP_Init(void)
 
         /* `#END` */
 
+        #ifdef USBUART_MIDI1_PROCESS_USB_OUT_ENTRY_CALLBACK
+            USBUART_MIDI1_ProcessUsbOut_EntryCallback();
+        #endif /* USBUART_MIDI1_PROCESS_USB_OUT_ENTRY_CALLBACK */
+
         cmd = epBuf[USBUART_EVENT_BYTE0] & USBUART_CIN_MASK;
         if((cmd != USBUART_RESERVED0) && (cmd != USBUART_RESERVED1))
         {
@@ -1118,6 +1130,10 @@ void USBUART_MIDI_EP_Init(void)
         /* `#START MIDI1_PROCESS_OUT_END` */
 
         /* `#END` */
+
+        #ifdef USBUART_MIDI1_PROCESS_USB_OUT_EXIT_CALLBACK
+            USBUART_MIDI1_ProcessUsbOut_ExitCallback();
+        #endif /* USBUART_MIDI1_PROCESS_USB_OUT_EXIT_CALLBACK */
     }
 
 
@@ -1269,6 +1285,10 @@ void USBUART_MIDI_EP_Init(void)
 
         /* `#END` */
 
+        #ifdef USBUART_MIDI2_PROCESS_USB_OUT_ENTRY_CALLBACK
+            USBUART_MIDI2_ProcessUsbOut_EntryCallback();
+        #endif /* USBUART_MIDI2_PROCESS_USB_OUT_ENTRY_CALLBACK */
+
         cmd = epBuf[USBUART_EVENT_BYTE0] & USBUART_CIN_MASK;
         if((cmd != USBUART_RESERVED0) && (cmd != USBUART_RESERVED1))
         {
@@ -1341,6 +1361,10 @@ void USBUART_MIDI_EP_Init(void)
         /* `#START MIDI2_PROCESS_OUT_END` */
 
         /* `#END` */
+
+        #ifdef USBUART_MIDI2_PROCESS_USB_OUT_EXIT_CALLBACK
+            USBUART_MIDI2_ProcessUsbOut_ExitCallback();
+        #endif /* USBUART_MIDI2_PROCESS_USB_OUT_EXIT_CALLBACK */
     }
 #endif /* (USBUART_MIDI_EXT_MODE >= USBUART_TWO_EXT_INTRF) */
 #endif /* (USBUART_MIDI_EXT_MODE >= USBUART_ONE_EXT_INTRF) */
