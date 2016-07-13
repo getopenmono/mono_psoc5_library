@@ -1,14 +1,14 @@
 /*******************************************************************************
 * File Name: USBUART_Dp.h  
-* Version 2.10
+* Version 2.20
 *
 * Description:
-*  This file containts Control Register function prototypes and register defines
+*  This file contains Pin function prototypes and register defines
 *
 * Note:
 *
 ********************************************************************************
-* Copyright 2008-2014, Cypress Semiconductor Corporation.  All rights reserved.
+* Copyright 2008-2015, Cypress Semiconductor Corporation.  All rights reserved.
 * You may use this file only in accordance with the license, terms, conditions, 
 * disclaimers, and limitations in the end user license agreement accompanying 
 * the software package with which this file was provided.
@@ -22,12 +22,6 @@
 #include "cypins.h"
 #include "USBUART_Dp_aliases.h"
 
-/* Check to see if required defines such as CY_PSOC5A are available */
-/* They are defined starting with cy_boot v3.0 */
-#if !defined (CY_PSOC5A)
-    #error Component cy_pins_v2_10 requires cy_boot v3.0 or later
-#endif /* (CY_PSOC5A) */
-
 /* APIs are not generated for P15[7:6] */
 #if !(CY_PSOC5A &&\
 	 USBUART_Dp__PORT == 15 && ((USBUART_Dp__MASK & 0xC0) != 0))
@@ -37,31 +31,64 @@
 *        Function Prototypes             
 ***************************************/    
 
-void    USBUART_Dp_Write(uint8 value) ;
-void    USBUART_Dp_SetDriveMode(uint8 mode) ;
-uint8   USBUART_Dp_ReadDataReg(void) ;
-uint8   USBUART_Dp_Read(void) ;
-uint8   USBUART_Dp_ClearInterrupt(void) ;
-
+/**
+* \addtogroup group_general
+* @{
+*/
+void    USBUART_Dp_Write(uint8 value);
+void    USBUART_Dp_SetDriveMode(uint8 mode);
+uint8   USBUART_Dp_ReadDataReg(void);
+uint8   USBUART_Dp_Read(void);
+void    USBUART_Dp_SetInterruptMode(uint16 position, uint16 mode);
+uint8   USBUART_Dp_ClearInterrupt(void);
+/** @} general */
 
 /***************************************
 *           API Constants        
 ***************************************/
-
-/* Drive Modes */
-#define USBUART_Dp_DM_ALG_HIZ         PIN_DM_ALG_HIZ
-#define USBUART_Dp_DM_DIG_HIZ         PIN_DM_DIG_HIZ
-#define USBUART_Dp_DM_RES_UP          PIN_DM_RES_UP
-#define USBUART_Dp_DM_RES_DWN         PIN_DM_RES_DWN
-#define USBUART_Dp_DM_OD_LO           PIN_DM_OD_LO
-#define USBUART_Dp_DM_OD_HI           PIN_DM_OD_HI
-#define USBUART_Dp_DM_STRONG          PIN_DM_STRONG
-#define USBUART_Dp_DM_RES_UPDWN       PIN_DM_RES_UPDWN
-
+/**
+* \addtogroup group_constants
+* @{
+*/
+    /** \addtogroup driveMode Drive mode constants
+     * \brief Constants to be passed as "mode" parameter in the USBUART_Dp_SetDriveMode() function.
+     *  @{
+     */
+        #define USBUART_Dp_DM_ALG_HIZ         PIN_DM_ALG_HIZ
+        #define USBUART_Dp_DM_DIG_HIZ         PIN_DM_DIG_HIZ
+        #define USBUART_Dp_DM_RES_UP          PIN_DM_RES_UP
+        #define USBUART_Dp_DM_RES_DWN         PIN_DM_RES_DWN
+        #define USBUART_Dp_DM_OD_LO           PIN_DM_OD_LO
+        #define USBUART_Dp_DM_OD_HI           PIN_DM_OD_HI
+        #define USBUART_Dp_DM_STRONG          PIN_DM_STRONG
+        #define USBUART_Dp_DM_RES_UPDWN       PIN_DM_RES_UPDWN
+    /** @} driveMode */
+/** @} group_constants */
+    
 /* Digital Port Constants */
 #define USBUART_Dp_MASK               USBUART_Dp__MASK
 #define USBUART_Dp_SHIFT              USBUART_Dp__SHIFT
 #define USBUART_Dp_WIDTH              1u
+
+/* Interrupt constants */
+#if defined(USBUART_Dp__INTSTAT)
+/**
+* \addtogroup group_constants
+* @{
+*/
+    /** \addtogroup intrMode Interrupt constants
+     * \brief Constants to be passed as "mode" parameter in USBUART_Dp_SetInterruptMode() function.
+     *  @{
+     */
+        #define USBUART_Dp_INTR_NONE      (uint16)(0x0000u)
+        #define USBUART_Dp_INTR_RISING    (uint16)(0x0001u)
+        #define USBUART_Dp_INTR_FALLING   (uint16)(0x0002u)
+        #define USBUART_Dp_INTR_BOTH      (uint16)(0x0003u) 
+    /** @} intrMode */
+/** @} group_constants */
+
+    #define USBUART_Dp_INTR_MASK      (0x01u) 
+#endif /* (USBUART_Dp__INTSTAT) */
 
 
 /***************************************
@@ -114,13 +141,21 @@ uint8   USBUART_Dp_ClearInterrupt(void) ;
 /* Sync Output Enable Registers */
 #define USBUART_Dp_PRTDSI__SYNC_OUT       (* (reg8 *) USBUART_Dp__PRTDSI__SYNC_OUT) 
 
+/* SIO registers */
+#if defined(USBUART_Dp__SIO_CFG)
+    #define USBUART_Dp_SIO_HYST_EN        (* (reg8 *) USBUART_Dp__SIO_HYST_EN)
+    #define USBUART_Dp_SIO_REG_HIFREQ     (* (reg8 *) USBUART_Dp__SIO_REG_HIFREQ)
+    #define USBUART_Dp_SIO_CFG            (* (reg8 *) USBUART_Dp__SIO_CFG)
+    #define USBUART_Dp_SIO_DIFF           (* (reg8 *) USBUART_Dp__SIO_DIFF)
+#endif /* (USBUART_Dp__SIO_CFG) */
 
-#if defined(USBUART_Dp__INTSTAT)  /* Interrupt Registers */
-
-    #define USBUART_Dp_INTSTAT                (* (reg8 *) USBUART_Dp__INTSTAT)
-    #define USBUART_Dp_SNAP                   (* (reg8 *) USBUART_Dp__SNAP)
-
-#endif /* Interrupt Registers */
+/* Interrupt Registers */
+#if defined(USBUART_Dp__INTSTAT)
+    #define USBUART_Dp_INTSTAT            (* (reg8 *) USBUART_Dp__INTSTAT)
+    #define USBUART_Dp_SNAP               (* (reg8 *) USBUART_Dp__SNAP)
+    
+	#define USBUART_Dp_0_INTTYPE_REG 		(* (reg8 *) USBUART_Dp__0__INTTYPE)
+#endif /* (USBUART_Dp__INTSTAT) */
 
 #endif /* CY_PSOC5A... */
 

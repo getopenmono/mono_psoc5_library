@@ -1,26 +1,22 @@
-/*******************************************************************************
-* File Name: USBUART_cls.c
-* Version 2.80
+/***************************************************************************//**
+* \file USBUART_cls.c
+* \version 3.0
 *
-* Description:
-*  USB Class request handler.
-*
-* Note:
+* \brief
+*  This file contains the USB Class request handler.
 *
 ********************************************************************************
-* Copyright 2008-2014, Cypress Semiconductor Corporation.  All rights reserved.
+* \copyright
+* Copyright 2008-2015, Cypress Semiconductor Corporation.  All rights reserved.
 * You may use this file only in accordance with the license, terms, conditions,
 * disclaimers, and limitations in the end user license agreement accompanying
 * the software package with which this file was provided.
 *******************************************************************************/
 
-#include "USBUART.h"
-
-#if(USBUART_EXTERN_CLS == USBUART_FALSE)
-
 #include "USBUART_pvt.h"
 
 
+#if(USBUART_EXTERN_CLS == USBUART_FALSE)
 
 /***************************************
 * User Implemented Class Driver Declarations.
@@ -32,69 +28,110 @@
 
 /*******************************************************************************
 * Function Name: USBUART_DispatchClassRqst
-********************************************************************************
-* Summary:
+****************************************************************************//**
 *  This routine dispatches class specific requests depend on interface class.
 *
-* Parameters:
-*  None.
-*
-* Return:
+* \return
 *  requestHandled.
 *
-* Reentrant:
+* \reentrant
 *  No.
 *
 *******************************************************************************/
 uint8 USBUART_DispatchClassRqst(void) 
 {
-    uint8 requestHandled = USBUART_FALSE;
-    uint8 interfaceNumber = 0u;
+    uint8 requestHandled;
+    uint8 interfaceNumber;
 
-    switch(CY_GET_REG8(USBUART_bmRequestType) & USBUART_RQST_RCPT_MASK)
+    /* Get interface to which request is intended. */
+    switch (USBUART_bmRequestTypeReg & USBUART_RQST_RCPT_MASK)
     {
-        case USBUART_RQST_RCPT_IFC:        /* Class-specific request directed to an interface */
-            interfaceNumber = CY_GET_REG8(USBUART_wIndexLo); /* wIndexLo contain Interface number */
+        case USBUART_RQST_RCPT_IFC:
+            /* Class-specific request directed to interface: wIndexLoReg 
+            * contains interface number.
+            */
+            interfaceNumber = (uint8) USBUART_wIndexLoReg;
             break;
-        case USBUART_RQST_RCPT_EP:         /* Class-specific request directed to the endpoint */
-            /* Find related interface to the endpoint, wIndexLo contain EP number */
-            interfaceNumber = USBUART_EP[CY_GET_REG8(USBUART_wIndexLo) &
-                              USBUART_DIR_UNUSED].interface;
+        
+        case USBUART_RQST_RCPT_EP:
+            /* Class-specific request directed to endpoint: wIndexLoReg contains 
+            * endpoint number. Find interface related to endpoint, 
+            */
+            interfaceNumber = USBUART_EP[USBUART_wIndexLoReg & USBUART_DIR_UNUSED].interface;
             break;
-        default:    /* RequestHandled is initialized as FALSE by default */
+            
+        default:
+            /* Default interface is zero. */
+            interfaceNumber = 0u;
             break;
     }
-    /* Handle Class request depend on interface type */
-    switch(USBUART_interfaceClass[interfaceNumber])
+
+#if (defined(USBUART_ENABLE_HID_CLASS) ||\
+            defined(USBUART_ENABLE_AUDIO_CLASS) ||\
+            defined(USBUART_ENABLE_CDC_CLASS) ||\
+            USBUART_ENABLE_MSC_CLASS)
+
+    /* Handle class request depends on interface type. */
+    switch (USBUART_interfaceClass[interfaceNumber])
     {
+    #if defined(USBUART_ENABLE_HID_CLASS)
         case USBUART_CLASS_HID:
-            #if defined(USBUART_ENABLE_HID_CLASS)
-                requestHandled = USBUART_DispatchHIDClassRqst();
-            #endif /* USBUART_ENABLE_HID_CLASS */
+            requestHandled = USBUART_DispatchHIDClassRqst();
             break;
+    #endif /* (USBUART_ENABLE_HID_CLASS) */
+            
+    #if defined(USBUART_ENABLE_AUDIO_CLASS)
         case USBUART_CLASS_AUDIO:
-            #if defined(USBUART_ENABLE_AUDIO_CLASS)
-                requestHandled = USBUART_DispatchAUDIOClassRqst();
-            #endif /* USBUART_CLASS_AUDIO */
+            requestHandled = USBUART_DispatchAUDIOClassRqst();
             break;
+    #endif /* (USBUART_CLASS_AUDIO) */
+            
+    #if defined(USBUART_ENABLE_CDC_CLASS)
         case USBUART_CLASS_CDC:
-            #if defined(USBUART_ENABLE_CDC_CLASS)
-                requestHandled = USBUART_DispatchCDCClassRqst();
-            #endif /* USBUART_ENABLE_CDC_CLASS */
+            requestHandled = USBUART_DispatchCDCClassRqst();
             break;
-        default:    /* requestHandled is initialized as FALSE by default */
+    #endif /* (USBUART_ENABLE_CDC_CLASS) */
+        
+    #if (USBUART_ENABLE_MSC_CLASS)
+        case USBUART_CLASS_MSD:
+        #if (USBUART_HANDLE_MSC_REQUESTS)
+            /* MSC requests are handled by the component. */
+            requestHandled = USBUART_DispatchMSCClassRqst();
+        #elif defined(USBUART_DISPATCH_MSC_CLASS_RQST_CALLBACK)
+            /* MSC requests are handled by user defined callbcak. */
+            requestHandled = USBUART_DispatchMSCClassRqst_Callback();
+        #else
+            /* MSC requests are not handled. */
+            requestHandled = USBUART_FALSE;
+        #endif /* (USBUART_HANDLE_MSC_REQUESTS) */
+            break;
+    #endif /* (USBUART_ENABLE_MSC_CLASS) */
+        
+        default:
+            /* Request is not handled: unknown class request type. */
+            requestHandled = USBUART_FALSE;
             break;
     }
+#else /*No class is defined*/
+    if (0u != interfaceNumber)
+    {
+        /* Suppress warning message */
+    }
+    requestHandled = USBUART_FALSE;
+#endif /*HID or AUDIO or MSC or CDC class enabled*/
 
     /* `#START USER_DEFINED_CLASS_CODE` Place your Class request here */
 
     /* `#END` */
 
-    #ifdef USBUART_DISPATCH_CLASS_RQST_CALLBACK
-        USBUART_DispatchClassRqst_Callback();
-    #endif /* USBUART_DISPATCH_CLASS_RQST_CALLBACK */
+#ifdef USBUART_DISPATCH_CLASS_RQST_CALLBACK
+    if (USBUART_FALSE == requestHandled)
+    {
+        requestHandled = USBUART_DispatchClassRqst_Callback(interfaceNumber);
+    }
+#endif /* (USBUART_DISPATCH_CLASS_RQST_CALLBACK) */
 
-    return(requestHandled);
+    return (requestHandled);
 }
 
 

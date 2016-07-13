@@ -1,31 +1,26 @@
-/*******************************************************************************
-* File Name: USBUART_audio.c
-* Version 2.80
+/***************************************************************************//**
+* \file USBUART_audio.c
+* \version 3.0
 *
-* Description:
-*  USB AUDIO Class request handler.
+* \brief
+*  This file contains the USB AUDIO Class request handler.
 *
 * Related Document:
 *  Universal Serial Bus Device Class Definition for Audio Devices Release 1.0
 *
 ********************************************************************************
-* Copyright 2008-2014, Cypress Semiconductor Corporation.  All rights reserved.
+* \copyright
+* Copyright 2008-2015, Cypress Semiconductor Corporation.  All rights reserved.
 * You may use this file only in accordance with the license, terms, conditions,
 * disclaimers, and limitations in the end user license agreement accompanying
 * the software package with which this file was provided.
 *******************************************************************************/
 
-#include "USBUART.h"
+#include "USBUART_audio.h"
+#include "USBUART_pvt.h"
 
 
 #if defined(USBUART_ENABLE_AUDIO_CLASS)
-
-#include "USBUART_audio.h"
-#include "USBUART_pvt.h"
-#if defined(USBUART_ENABLE_MIDI_STREAMING)
-    #include "USBUART_midi.h"
-#endif /*  USBUART_ENABLE_MIDI_STREAMING*/
-
 
 /***************************************
 * Custom Declarations
@@ -38,15 +33,24 @@
 
 #if !defined(USER_SUPPLIED_AUDIO_HANDLER)
 
-
 /***************************************
 *    AUDIO Variables
 ***************************************/
 
 #if defined(USBUART_ENABLE_AUDIO_STREAMING)
+    /** Contains the current audio sample frequency. It is set by the host using a SET_CUR request to the endpoint.*/
     volatile uint8 USBUART_currentSampleFrequency[USBUART_MAX_EP][USBUART_SAMPLE_FREQ_LEN];
+    /** Used as a flag for the user code, to inform it that the host has been sent a request 
+     * to change the sample frequency. The sample frequency will be sent on the next OUT transaction. 
+     * It contains the endpoint address when set. The following code is recommended for 
+     * detecting new sample frequency in main code:
+     * \snippet  /USBFS_sut_02.cydsn/main.c Detecting new Sample Frequency
+     *     
+     * The USBFS_transferState variable is checked to make sure that the transfer completes. */
     volatile uint8 USBUART_frequencyChanged;
+    /** Contains the mute configuration set by the host.*/
     volatile uint8 USBUART_currentMute;
+    /** Contains the volume level set by the host.*/
     volatile uint8 USBUART_currentVolume[USBUART_VOLUME_LEN];
     volatile uint8 USBUART_minimumVolume[USBUART_VOLUME_LEN] = {USBUART_VOL_MIN_LSB,
                                                                                   USBUART_VOL_MIN_MSB};
@@ -59,18 +63,16 @@
 
 /*******************************************************************************
 * Function Name: USBUART_DispatchAUDIOClassRqst
-********************************************************************************
+****************************************************************************//**
 *
-* Summary:
 *  This routine dispatches class requests
 *
-* Parameters:
-*  None.
+* \return
+*  Results of Audio Class request handling: 
+*  - USBUART_TRUE  - request was handled without errors
+*  - USBUART_FALSE - error occurs during handling of request     
 *
-* Return:
-*  requestHandled
-*
-* Global variables:
+* \globalvars
 *   USBUART_currentSampleFrequency: Contains the current audio Sample
 *       Frequency. It is set by the Host using SET_CUR request to the endpoint.
 *   USBUART_frequencyChanged: This variable is used as a flag for the
@@ -78,99 +80,103 @@
 *       Sample Frequency. Sample frequency will be sent on the next OUT
 *       transaction. It is contains endpoint address when set. The following
 *       code is recommended for detecting new Sample Frequency in main code:
-*       if((USBUART_frequencyChanged != 0) &&
-*       (USBUART_transferState == USBUART_TRANS_STATE_IDLE))
-*       {
-*          USBUART_frequencyChanged = 0;
-*       }
-*       USBUART_transferState variable is checked to be sure that
-*             transfer completes.
+*       
+*  \snippet  /USBFS_sut_02.cydsn/main.c Detecting new Sample Frequency
+*      
+*   USBUART_transferState variable is checked to be sure that transfer
+*              completes.
 *   USBUART_currentMute: Contains mute configuration set by Host.
 *   USBUART_currentVolume: Contains volume level set by Host.
 *
-* Reentrant:
+* \reentrant
 *  No.
 *
 *******************************************************************************/
 uint8 USBUART_DispatchAUDIOClassRqst(void) 
 {
     uint8 requestHandled = USBUART_FALSE;
-    uint8 bmRequestType  = CY_GET_REG8(USBUART_bmRequestType);
-
-    #if defined(USBUART_ENABLE_AUDIO_STREAMING)
-        uint8 epNumber;
-        epNumber = CY_GET_REG8(USBUART_wIndexLo) & USBUART_DIR_UNUSED;
-    #endif /*  USBUART_ENABLE_AUDIO_STREAMING */
-
-
-    if ((bmRequestType & USBUART_RQST_DIR_MASK) == USBUART_RQST_DIR_D2H)
+    
+    uint8 RqstRcpt = (uint8)(USBUART_bmRequestTypeReg & USBUART_RQST_RCPT_MASK);
+#if defined(USBUART_ENABLE_AUDIO_STREAMING)
+    uint8 wValueHi = (uint8) USBUART_wValueHiReg;
+    uint8 epNumber = (uint8) USBUART_wIndexLoReg & USBUART_DIR_UNUSED;
+#endif /* (USBUART_ENABLE_AUDIO_STREAMING) */
+    
+    /* Check request direction: D2H or H2D. */
+    if (0u != (USBUART_bmRequestTypeReg & USBUART_RQST_DIR_D2H))
     {
-        /* Control Read */
-        if((bmRequestType & USBUART_RQST_RCPT_MASK) == USBUART_RQST_RCPT_EP)
+        /* Handle direction from device to host. */
+        
+        if (USBUART_RQST_RCPT_EP == RqstRcpt)
         {
-            /* Endpoint */
-            switch (CY_GET_REG8(USBUART_bRequest))
+            /* Request recipient is to endpoint. */
+            switch (USBUART_bRequestReg)
             {
                 case USBUART_GET_CUR:
                 #if defined(USBUART_ENABLE_AUDIO_STREAMING)
-                    if(CY_GET_REG8(USBUART_wValueHi) == USBUART_SAMPLING_FREQ_CONTROL)
+                    if (wValueHi == USBUART_SAMPLING_FREQ_CONTROL)
                     {
                          /* point Control Selector is Sampling Frequency */
                         USBUART_currentTD.wCount = USBUART_SAMPLE_FREQ_LEN;
                         USBUART_currentTD.pData  = USBUART_currentSampleFrequency[epNumber];
+                        
                         requestHandled   = USBUART_InitControlRead();
                     }
-                #endif /*  USBUART_ENABLE_AUDIO_STREAMING */
-
-                /* `#START AUDIO_READ_REQUESTS` Place other request handler here */
-
-                /* `#END` */
+                #endif /* (USBUART_ENABLE_AUDIO_STREAMING) */
                 
-                #ifdef USBUART_DISPATCH_AUDIO_CLASS_AUDIO_READ_REQUESTS_CALLBACK
-                    USBUART_DispatchAUDIOClass_AUDIO_READ_REQUESTS_Callback();
-                #endif /* USBUART_DISPATCH_AUDIO_CLASS_AUDIO_READ_REQUESTS_CALLBACK */
+                    /* `#START AUDIO_READ_REQUESTS` Place other request handler here */
 
-                    break;
+                    /* `#END` */
+                
+                #ifdef USBUART_DISPATCH_AUDIO_CLASS_AUDIO_READ_REQUESTS_CALLBACK    
+                    USBUART_DispatchAUDIOClass_AUDIO_READ_REQUESTS_Callback();
+                #endif /* (USBUART_DISPATCH_AUDIO_CLASS_AUDIO_READ_REQUESTS_CALLBACK) */                   
+                break;
+                
                 default:
+                    /* Do not handle this request unless callback is defined. */
                     break;
             }
+        
         }
-        else if((bmRequestType & USBUART_RQST_RCPT_MASK) == USBUART_RQST_RCPT_IFC)
+        else if (USBUART_RQST_RCPT_IFC == RqstRcpt)
         {
-            /* Interface or Entity ID */
-            switch (CY_GET_REG8(USBUART_bRequest))
+            /* Request recipient is interface or entity ID. */
+            switch (USBUART_bRequestReg)
             {
                 case USBUART_GET_CUR:
                 #if defined(USBUART_ENABLE_AUDIO_STREAMING)
-                    if(CY_GET_REG8(USBUART_wValueHi) == USBUART_MUTE_CONTROL)
+                    if (wValueHi == USBUART_MUTE_CONTROL)
                     {
                         /* `#START MUTE_CONTROL_GET_REQUEST` Place multi-channel handler here */
 
                         /* `#END` */
 
-                        #ifdef USBUART_DISPATCH_AUDIO_CLASS_MUTE_CONTROL_GET_REQUEST_CALLBACK
-                            USBUART_DispatchAUDIOClass_MUTE_CONTROL_GET_REQUEST_Callback();
-                        #endif /* USBUART_DISPATCH_AUDIO_CLASS_MUTE_CONTROL_GET_REQUEST_CALLBACK */
+                    #ifdef USBUART_DISPATCH_AUDIO_CLASS_MUTE_CONTROL_GET_REQUEST_CALLBACK
+                        USBUART_DispatchAUDIOClass_MUTE_CONTROL_GET_REQUEST_Callback();
+                    #endif /* (USBUART_DISPATCH_AUDIO_CLASS_MUTE_CONTROL_GET_REQUEST_CALLBACK) */
 
                         /* Entity ID Control Selector is MUTE */
                         USBUART_currentTD.wCount = 1u;
                         USBUART_currentTD.pData  = &USBUART_currentMute;
-                        requestHandled   = USBUART_InitControlRead();
+                        
+                        requestHandled = USBUART_InitControlRead();
                     }
-                    else if(CY_GET_REG8(USBUART_wValueHi) == USBUART_VOLUME_CONTROL)
+                    else if (wValueHi == USBUART_VOLUME_CONTROL)
                     {
                         /* `#START VOLUME_CONTROL_GET_REQUEST` Place multi-channel handler here */
 
                         /* `#END` */
 
-                        #ifdef USBUART_DISPATCH_AUDIO_CLASS_VOLUME_CONTROL_GET_REQUEST_CALLBACK
-                            USBUART_DispatchAUDIOClass_VOLUME_CONTROL_GET_REQUEST_Callback();
-                        #endif /* USBUART_DISPATCH_AUDIO_CLASS_VOLUME_CONTROL_GET_REQUEST_CALLBACK */
+                    #ifdef USBUART_DISPATCH_AUDIO_CLASS_VOLUME_CONTROL_GET_REQUEST_CALLBACK
+                        USBUART_DispatchAUDIOClass_VOLUME_CONTROL_GET_REQUEST_Callback();
+                    #endif /* (USBUART_DISPATCH_AUDIO_CLASS_VOLUME_CONTROL_GET_REQUEST_CALLBACK) */
 
                         /* Entity ID Control Selector is VOLUME, */
                         USBUART_currentTD.wCount = USBUART_VOLUME_LEN;
                         USBUART_currentTD.pData  = USBUART_currentVolume;
-                        requestHandled   = USBUART_InitControlRead();
+                        
+                        requestHandled = USBUART_InitControlRead();
                     }
                     else
                     {
@@ -178,134 +184,149 @@ uint8 USBUART_DispatchAUDIOClassRqst(void)
 
                         /* `#END` */
 
-                        #ifdef USBUART_DISPATCH_AUDIO_CLASS_OTHER_GET_CUR_REQUESTS_CALLBACK
-                            USBUART_DispatchAUDIOClass_OTHER_GET_CUR_REQUESTS_Callback();
-                        #endif /* USBUART_DISPATCH_AUDIO_CLASS_OTHER_GET_CUR_REQUESTS_CALLBACK */
+                    #ifdef USBUART_DISPATCH_AUDIO_CLASS_OTHER_GET_CUR_REQUESTS_CALLBACK
+                        USBUART_DispatchAUDIOClass_OTHER_GET_CUR_REQUESTS_Callback();
+                    #endif /* (USBUART_DISPATCH_AUDIO_CLASS_OTHER_GET_CUR_REQUESTS_CALLBACK) */
                     }
                     break;
-                case USBUART_GET_MIN:    /* GET_MIN */
-                    if(CY_GET_REG8(USBUART_wValueHi) == USBUART_VOLUME_CONTROL)
+                    
+                case USBUART_GET_MIN:
+                    if (wValueHi == USBUART_VOLUME_CONTROL)
                     {
                         /* Entity ID Control Selector is VOLUME, */
                         USBUART_currentTD.wCount = USBUART_VOLUME_LEN;
                         USBUART_currentTD.pData  = &USBUART_minimumVolume[0];
-                        requestHandled   = USBUART_InitControlRead();
+                        
+                        requestHandled = USBUART_InitControlRead();
                     }
                     break;
-                case USBUART_GET_MAX:    /* GET_MAX */
-                    if(CY_GET_REG8(USBUART_wValueHi) == USBUART_VOLUME_CONTROL)
+                    
+                case USBUART_GET_MAX:
+                    if (wValueHi == USBUART_VOLUME_CONTROL)
                     {
                         /* Entity ID Control Selector is VOLUME, */
                         USBUART_currentTD.wCount = USBUART_VOLUME_LEN;
                         USBUART_currentTD.pData  = &USBUART_maximumVolume[0];
-                        requestHandled   = USBUART_InitControlRead();
+                        
+                        requestHandled = USBUART_InitControlRead();
                     }
                     break;
-                case USBUART_GET_RES:    /* GET_RES */
-                    if(CY_GET_REG8(USBUART_wValueHi) == USBUART_VOLUME_CONTROL)
+                    
+                case USBUART_GET_RES:
+                    if (wValueHi == USBUART_VOLUME_CONTROL)
                     {
                          /* Entity ID Control Selector is VOLUME, */
                         USBUART_currentTD.wCount = USBUART_VOLUME_LEN;
                         USBUART_currentTD.pData  = &USBUART_resolutionVolume[0];
+                        
                         requestHandled   = USBUART_InitControlRead();
                     }
                     break;
+                    
                 /* The contents of the status message is reserved for future use.
-                *  For the time being, a null packet should be returned in the data stage of the
-                *  control transfer, and the received null packet should be ACKed.
+                * For the time being, a null packet should be returned in the data stage of the
+                * control transfer, and the received null packet should be ACKed.
                 */
                 case USBUART_GET_STAT:
-                        USBUART_currentTD.wCount = 0u;
-                        requestHandled   = USBUART_InitControlWrite();
+                    USBUART_currentTD.wCount = 0u;    
+                    
+                    requestHandled = USBUART_InitControlWrite();
 
-                #endif /*  USBUART_ENABLE_AUDIO_STREAMING */
+                #endif /* (USBUART_ENABLE_AUDIO_STREAMING) */
+                
+                    /* `#START AUDIO_WRITE_REQUESTS` Place other request handler here */
 
-                /* `#START AUDIO_WRITE_REQUESTS` Place other request handler here */
-
-                /* `#END` */
-
+                    /* `#END` */
+                
                 #ifdef USBUART_DISPATCH_AUDIO_CLASS_AUDIO_WRITE_REQUESTS_CALLBACK
                     USBUART_DispatchAUDIOClass_AUDIO_WRITE_REQUESTS_Callback();
-                #endif /* USBUART_DISPATCH_AUDIO_CLASS_AUDIO_WRITE_REQUESTS_CALLBACK */
-
+                #endif /* (USBUART_DISPATCH_AUDIO_CLASS_AUDIO_WRITE_REQUESTS_CALLBACK) */
                     break;
+                
                 default:
+                    /* Do not handle this request. */
                     break;
             }
         }
         else
-        {   /* USBUART_RQST_RCPT_OTHER */
+        {   
+            /* Do not handle other requests recipients. */
         }
     }
     else
     {
-        /* Control Write */
-        if((bmRequestType & USBUART_RQST_RCPT_MASK) == USBUART_RQST_RCPT_EP)
+        /* Handle direction from host to device. */
+        
+        if (USBUART_RQST_RCPT_EP == RqstRcpt)
         {
-            /* point */
-            switch (CY_GET_REG8(USBUART_bRequest))
+            /* Request recipient is endpoint. */
+            switch (USBUART_bRequestReg)
             {
                 case USBUART_SET_CUR:
                 #if defined(USBUART_ENABLE_AUDIO_STREAMING)
-                    if(CY_GET_REG8(USBUART_wValueHi) == USBUART_SAMPLING_FREQ_CONTROL)
+                    if (wValueHi == USBUART_SAMPLING_FREQ_CONTROL)
                     {
                          /* point Control Selector is Sampling Frequency */
                         USBUART_currentTD.wCount = USBUART_SAMPLE_FREQ_LEN;
                         USBUART_currentTD.pData  = USBUART_currentSampleFrequency[epNumber];
+                        USBUART_frequencyChanged = (uint8) epNumber;
+                        
                         requestHandled   = USBUART_InitControlWrite();
-                        USBUART_frequencyChanged = epNumber;
                     }
-                #endif /*  USBUART_ENABLE_AUDIO_STREAMING */
+                #endif /* (USBUART_ENABLE_AUDIO_STREAMING) */
 
-                /* `#START AUDIO_SAMPLING_FREQ_REQUESTS` Place other request handler here */
+                    /* `#START AUDIO_SAMPLING_FREQ_REQUESTS` Place other request handler here */
 
-                /* `#END` */
+                    /* `#END` */
 
                 #ifdef USBUART_DISPATCH_AUDIO_CLASS_AUDIO_SAMPLING_FREQ_REQUESTS_CALLBACK
                     USBUART_DispatchAUDIOClass_AUDIO_SAMPLING_FREQ_REQUESTS_Callback();
-                #endif /* USBUART_DISPATCH_AUDIO_CLASS_AUDIO_SAMPLING_FREQ_REQUESTS_CALLBACK */
-
+                #endif /* (USBUART_DISPATCH_AUDIO_CLASS_AUDIO_SAMPLING_FREQ_REQUESTS_CALLBACK) */
                     break;
+                
                 default:
+                    /* Do not handle this request. */
                     break;
             }
         }
-        else if((bmRequestType & USBUART_RQST_RCPT_MASK) == USBUART_RQST_RCPT_IFC)
+        else if(USBUART_RQST_RCPT_IFC == RqstRcpt)
         {
-            /* Interface or Entity ID */
-            switch (CY_GET_REG8(USBUART_bRequest))
+            /* Request recipient is interface or entity ID. */
+            switch (USBUART_bRequestReg)
             {
                 case USBUART_SET_CUR:
                 #if defined(USBUART_ENABLE_AUDIO_STREAMING)
-                    if(CY_GET_REG8(USBUART_wValueHi) == USBUART_MUTE_CONTROL)
+                    if (wValueHi == USBUART_MUTE_CONTROL)
                     {
                         /* `#START MUTE_SET_REQUEST` Place multi-channel handler here */
 
                         /* `#END` */
 
-                        #ifdef USBUART_DISPATCH_AUDIO_CLASS_MUTE_SET_REQUEST_CALLBACK
-                            USBUART_DispatchAUDIOClass_MUTE_SET_REQUEST_Callback();
-                        #endif /* USBUART_DISPATCH_AUDIO_CLASS_MUTE_SET_REQUEST_CALLBACK */
+                    #ifdef USBUART_DISPATCH_AUDIO_CLASS_MUTE_SET_REQUEST_CALLBACK
+                        USBUART_DispatchAUDIOClass_MUTE_SET_REQUEST_Callback();
+                    #endif /* (USBUART_DISPATCH_AUDIO_CLASS_MUTE_SET_REQUEST_CALLBACK) */
 
                         /* Entity ID Control Selector is MUTE */
                         USBUART_currentTD.wCount = 1u;
                         USBUART_currentTD.pData  = &USBUART_currentMute;
-                        requestHandled   = USBUART_InitControlWrite();
+                        
+                        requestHandled = USBUART_InitControlWrite();
                     }
-                    else if(CY_GET_REG8(USBUART_wValueHi) == USBUART_VOLUME_CONTROL)
+                    else if (wValueHi == USBUART_VOLUME_CONTROL)
                     {
                         /* `#START VOLUME_CONTROL_SET_REQUEST` Place multi-channel handler here */
 
                         /* `#END` */
 
-                        #ifdef USBUART_DISPATCH_AUDIO_CLASS_VOLUME_CONTROL_SET_REQUEST_CALLBACK
-                            USBUART_DispatchAUDIOClass_VOLUME_CONTROL_SET_REQUEST_Callback();
-                        #endif /* USBUART_DISPATCH_AUDIO_CLASS_VOLUME_CONTROL_SET_REQUEST_CALLBACK */
+                    #ifdef USBUART_DISPATCH_AUDIO_CLASS_VOLUME_CONTROL_SET_REQUEST_CALLBACK
+                        USBUART_DispatchAUDIOClass_VOLUME_CONTROL_SET_REQUEST_Callback();
+                    #endif /* (USBUART_DISPATCH_AUDIO_CLASS_VOLUME_CONTROL_SET_REQUEST_CALLBACK) */
 
                         /* Entity ID Control Selector is VOLUME */
                         USBUART_currentTD.wCount = USBUART_VOLUME_LEN;
                         USBUART_currentTD.pData  = USBUART_currentVolume;
-                        requestHandled   = USBUART_InitControlWrite();
+                        
+                        requestHandled = USBUART_InitControlWrite();
                     }
                     else
                     {
@@ -313,35 +334,36 @@ uint8 USBUART_DispatchAUDIOClassRqst(void)
 
                         /* `#END` */
 
-                        #ifdef USBUART_DISPATCH_AUDIO_CLASS_OTHER_SET_CUR_REQUESTS_CALLBACK
-                            USBUART_DispatchAUDIOClass_OTHER_SET_CUR_REQUESTS_Callback();
-                        #endif /* USBUART_DISPATCH_AUDIO_CLASS_OTHER_SET_CUR_REQUESTS_CALLBACK */
+                    #ifdef USBUART_DISPATCH_AUDIO_CLASS_OTHER_SET_CUR_REQUESTS_CALLBACK
+                        USBUART_DispatchAUDIOClass_OTHER_SET_CUR_REQUESTS_Callback();
+                    #endif /* (USBUART_DISPATCH_AUDIO_CLASS_OTHER_SET_CUR_REQUESTS_CALLBACK) */
                     }
                 #endif /*  USBUART_ENABLE_AUDIO_STREAMING */
+                
+                
+                    /* `#START AUDIO_CONTROL_SEL_REQUESTS` Place other request handler here */
 
-                /* `#START AUDIO_CONTROL_SEL_REQUESTS` Place other request handler here */
-
-                /* `#END` */
-
+                    /* `#END` */
+                    
                 #ifdef USBUART_DISPATCH_AUDIO_CLASS_AUDIO_CONTROL_SEL_REQUESTS_CALLBACK
                     USBUART_DispatchAUDIOClass_AUDIO_CONTROL_SEL_REQUESTS_Callback();
-                #endif /* USBUART_DISPATCH_AUDIO_CLASS_AUDIO_CONTROL_SEL_REQUESTS_CALLBACK */
+                #endif /* (USBUART_DISPATCH_AUDIO_CLASS_AUDIO_CONTROL_SEL_REQUESTS_CALLBACK) */
+                break;
 
-                    break;
                 default:
-                    break;
+                    /* Do not handle this request. */
+                break;
             }
         }
         else
         {
-            /* USBUART_RQST_RCPT_OTHER */
+            /* Do not handle other requests recipients. */
         }
     }
 
-    return(requestHandled);
+    return (requestHandled);
 }
-
-#endif /* USER_SUPPLIED_AUDIO_HANDLER */
+#endif /* (USER_SUPPLIED_AUDIO_HANDLER) */
 
 
 /*******************************************************************************
@@ -352,7 +374,7 @@ uint8 USBUART_DispatchAUDIOClassRqst(void)
 
 /* `#END` */
 
-#endif  /*  USBUART_ENABLE_AUDIO_CLASS */
+#endif  /* (USBUART_ENABLE_AUDIO_CLASS) */
 
 
 /* [] END OF FILE */

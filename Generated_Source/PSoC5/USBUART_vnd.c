@@ -1,25 +1,22 @@
-/*******************************************************************************
-* File Name: USBUART_vnd.c
-* Version 2.80
+/***************************************************************************//**
+* \file USBUART_vnd.c
+* \version 3.0
 *
-* Description:
-*  USB vendor request handler.
-*
-* Note:
+* \brief
+*  This file contains the  USB vendor request handler.
 *
 ********************************************************************************
-* Copyright 2008-2014, Cypress Semiconductor Corporation.  All rights reserved.
+* \copyright
+* Copyright 2008-2015, Cypress Semiconductor Corporation.  All rights reserved.
 * You may use this file only in accordance with the license, terms, conditions,
 * disclaimers, and limitations in the end user license agreement accompanying
 * the software package with which this file was provided.
 *******************************************************************************/
 
-#include "USBUART.h"
 #include "USBUART_pvt.h"
 
 
 #if(USBUART_EXTERN_VND == USBUART_FALSE)
-
 
 /***************************************
 * Vendor Specific Declarations
@@ -32,9 +29,8 @@
 
 /*******************************************************************************
 * Function Name: USBUART_HandleVendorRqst
-********************************************************************************
+****************************************************************************//**
 *
-* Summary:
 *  This routine provide users with a method to implement vendor specific
 *  requests.
 *
@@ -43,13 +39,10 @@
 *  must set the variable "requestHandled" to TRUE, indicating that the
 *  request has been handled.
 *
-* Parameters:
-*  None.
-*
-* Return:
+* \return
 *  requestHandled.
 *
-* Reentrant:
+* \reentrant
 *  No.
 *
 *******************************************************************************/
@@ -57,18 +50,21 @@ uint8 USBUART_HandleVendorRqst(void)
 {
     uint8 requestHandled = USBUART_FALSE;
 
-    if ((CY_GET_REG8(USBUART_bmRequestType) & USBUART_RQST_DIR_MASK) == USBUART_RQST_DIR_D2H)
+    /* Check request direction: D2H or H2D. */
+    if (0u != (USBUART_bmRequestTypeReg & USBUART_RQST_DIR_D2H))
     {
-        /* Control Read */
-        switch (CY_GET_REG8(USBUART_bRequest))
+        /* Handle direction from device to host. */
+        
+        switch (USBUART_bRequestReg)
         {
             case USBUART_GET_EXTENDED_CONFIG_DESCRIPTOR:
-                #if defined(USBUART_ENABLE_MSOS_STRING)
-                    USBUART_currentTD.pData = (volatile uint8 *)&USBUART_MSOS_CONFIGURATION_DESCR[0u];
-                    USBUART_currentTD.count = USBUART_MSOS_CONFIGURATION_DESCR[0u];
-                    requestHandled  = USBUART_InitControlRead();
-                #endif /*  USBUART_ENABLE_MSOS_STRING */
+            #if defined(USBUART_ENABLE_MSOS_STRING)
+                USBUART_currentTD.pData = (volatile uint8 *) &USBUART_MSOS_CONFIGURATION_DESCR[0u];
+                USBUART_currentTD.count = USBUART_MSOS_CONFIGURATION_DESCR[0u];
+                requestHandled  = USBUART_InitControlRead();
+            #endif /* (USBUART_ENABLE_MSOS_STRING) */
                 break;
+            
             default:
                 break;
         }
@@ -78,11 +74,14 @@ uint8 USBUART_HandleVendorRqst(void)
 
     /* `#END` */
 
-    #ifdef USBUART_HANDLE_VENDOR_RQST_CALLBACK
-        USBUART_HandleVendorRqst_Callback();
-    #endif /* USBUART_HANDLE_VENDOR_RQST_CALLBACK */
+#ifdef USBUART_HANDLE_VENDOR_RQST_CALLBACK
+    if (USBUART_FALSE == requestHandled)
+    {
+        requestHandled = USBUART_HandleVendorRqst_Callback();
+    }
+#endif /* (USBUART_HANDLE_VENDOR_RQST_CALLBACK) */
 
-    return(requestHandled);
+    return (requestHandled);
 }
 
 
@@ -93,6 +92,7 @@ uint8 USBUART_HandleVendorRqst(void)
 /* `#START VENDOR_SPECIFIC_FUNCTIONS` Place any additional functions here */
 
 /* `#END` */
+
 
 #endif /* USBUART_EXTERN_VND */
 

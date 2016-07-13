@@ -1,15 +1,17 @@
-/*******************************************************************************
-* File Name: USBUART_audio.h
-* Version 2.80
+/***************************************************************************//**
+* \file USBUART_audio.h
+* \version 3.0
 *
-* Description:
-*  Header File for the USBFS component. Contains prototypes and constant values.
+* \brief
+*  This file provides function prototypes and constants for the USBFS component 
+*  Audio class.
 *
 * Related Document:
 *  Universal Serial Bus Device Class Definition for Audio Devices Release 1.0
 *
 ********************************************************************************
-* Copyright 2008-2014, Cypress Semiconductor Corporation.  All rights reserved.
+* \copyright
+* Copyright 2008-2015, Cypress Semiconductor Corporation.  All rights reserved.
 * You may use this file only in accordance with the license, terms, conditions,
 * disclaimers, and limitations in the end user license agreement accompanying
 * the software package with which this file was provided.
@@ -18,7 +20,7 @@
 #if !defined(CY_USBFS_USBUART_audio_H)
 #define CY_USBFS_USBUART_audio_H
 
-#include "cytypes.h"
+#include "USBUART.h"
 
 
 /***************************************
@@ -82,12 +84,16 @@
 /***************************************
 * External data references
 ***************************************/
-
-extern volatile uint8 USBUART_currentSampleFrequency[USBUART_MAX_EP]
-                                                             [USBUART_SAMPLE_FREQ_LEN];
+/**
+* \addtogroup group_audio
+* @{
+*/
+extern volatile uint8 USBUART_currentSampleFrequency[USBUART_MAX_EP][USBUART_SAMPLE_FREQ_LEN];
 extern volatile uint8 USBUART_frequencyChanged;
 extern volatile uint8 USBUART_currentMute;
 extern volatile uint8 USBUART_currentVolume[USBUART_VOLUME_LEN];
+/** @} audio */
+
 extern volatile uint8 USBUART_minimumVolume[USBUART_VOLUME_LEN];
 extern volatile uint8 USBUART_maximumVolume[USBUART_VOLUME_LEN];
 extern volatile uint8 USBUART_resolutionVolume[USBUART_VOLUME_LEN];

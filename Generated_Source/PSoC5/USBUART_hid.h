@@ -1,15 +1,17 @@
-/*******************************************************************************
-* File Name: USBUART_hid.h
-* Version 2.80
+/***************************************************************************//**
+* \file USBUART_hid.h
+* \version 3.0
 *
-* Description:
-*  Header File for the USBFS component. Contains prototypes and constant values.
+* \brief
+*  This file provides function prototypes and constants for the USBFS component 
+*  HID class.
 *
 * Related Document:
 *  Device Class Definition for Human Interface Devices (HID) Version 1.11
 *
 ********************************************************************************
-* Copyright 2008-2014, Cypress Semiconductor Corporation.  All rights reserved.
+* \copyright
+* Copyright 2008-2015, Cypress Semiconductor Corporation.  All rights reserved.
 * You may use this file only in accordance with the license, terms, conditions,
 * disclaimers, and limitations in the end user license agreement accompanying
 * the software package with which this file was provided.
@@ -18,22 +20,24 @@
 #if !defined(CY_USBFS_USBUART_hid_H)
 #define CY_USBFS_USBUART_hid_H
 
-#include "cytypes.h"
-
+#include "USBUART.h"
 
 /***************************************
 * Prototypes of the USBUART_hid API.
 ***************************************/
-
+/**
+* \addtogroup group_hid
+* @{
+*/
 uint8 USBUART_UpdateHIDTimer(uint8 interface) ;
-uint8 USBUART_GetProtocol(uint8 interface) ;
-
+uint8 USBUART_GetProtocol(uint8 interface)    ;
+/** @} hid */
 
 /***************************************
 *Renamed Functions for backward compatible
 ***************************************/
 
-#define USBUART_bGetProtocol               USBUART_GetProtocol
+#define USBUART_bGetProtocol   USBUART_GetProtocol
 
 
 /***************************************

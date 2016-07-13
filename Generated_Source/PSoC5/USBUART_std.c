@@ -1,87 +1,83 @@
-/*******************************************************************************
-* File Name: USBUART_std.c
-* Version 2.80
+/***************************************************************************//**
+* \file USBUART_std.c
+* \version 3.0
 *
-* Description:
-*  USB Standard request handler.
-*
-* Note:
+* \brief
+*  This file contains the USB Standard request handler.
 *
 ********************************************************************************
-* Copyright 2008-2014, Cypress Semiconductor Corporation.  All rights reserved.
+* \copyright
+* Copyright 2008-2015, Cypress Semiconductor Corporation.  All rights reserved.
 * You may use this file only in accordance with the license, terms, conditions,
 * disclaimers, and limitations in the end user license agreement accompanying
 * the software package with which this file was provided.
 *******************************************************************************/
 
-#include "USBUART.h"
-#include "USBUART_cdc.h"
 #include "USBUART_pvt.h"
-#if defined(USBUART_ENABLE_MIDI_STREAMING)
-    #include "USBUART_midi.h"
-#endif /*  USBUART_ENABLE_MIDI_STREAMING*/
-
 
 /***************************************
 *   Static data allocation
 ***************************************/
 
 #if defined(USBUART_ENABLE_FWSN_STRING)
-    static volatile uint8 *USBUART_fwSerialNumberStringDescriptor;
-    static volatile uint8 USBUART_snStringConfirm = USBUART_FALSE;
-#endif  /* USBUART_ENABLE_FWSN_STRING */
+    static volatile uint8* USBUART_fwSerialNumberStringDescriptor;
+    static volatile uint8  USBUART_snStringConfirm = USBUART_FALSE;
+#endif  /* (USBUART_ENABLE_FWSN_STRING) */
 
 #if defined(USBUART_ENABLE_FWSN_STRING)
-
-    /*******************************************************************************
+    /***************************************************************************
     * Function Name: USBUART_SerialNumString
-    ********************************************************************************
+    ************************************************************************//**
     *
-    * Summary:
-    *  Application firmware may supply the source of the USB device descriptors
-    *  serial number string during runtime.
+    *  This function is available only when the User Call Back option in the 
+    *  Serial Number String descriptor properties is selected. Application 
+    *  firmware can provide the source of the USB device serial number string 
+    *  descriptor during run time. The default string is used if the application 
+    *  firmware does not use this function or sets the wrong string descriptor.
     *
-    * Parameters:
-    *  snString:  pointer to string.
+    *  \param snString:  Pointer to the user-defined string descriptor. The 
+    *  string descriptor should meet the Universal Serial Bus Specification 
+    *  revision 2.0 chapter 9.6.7
+    *  Offset|Size|Value|Description
+    *  ------|----|------|---------------------------------
+    *  0     |1   |N     |Size of this descriptor in bytes
+    *  1     |1   |0x03  |STRING Descriptor Type
+    *  2     |N-2 |Number|UNICODE encoded string
+    *  
+    * *For example:* uint8 snString[16]={0x0E,0x03,'F',0,'W',0,'S',0,'N',0,'0',0,'1',0};
     *
-    * Return:
-    *  None.
-    *
-    * Reentrant:
+    * \reentrant
     *  No.
     *
-    *******************************************************************************/
+    ***************************************************************************/
     void  USBUART_SerialNumString(uint8 snString[]) 
     {
         USBUART_snStringConfirm = USBUART_FALSE;
-        if(snString != NULL)
+        
+        if (snString != NULL)
         {
             /* Check descriptor validation */
-            if( (snString[0u] > 1u ) && (snString[1u] == USBUART_DESCR_STRING) )
+            if ((snString[0u] > 1u) && (snString[1u] == USBUART_DESCR_STRING))
             {
                 USBUART_fwSerialNumberStringDescriptor = snString;
                 USBUART_snStringConfirm = USBUART_TRUE;
             }
         }
     }
-
 #endif  /* USBUART_ENABLE_FWSN_STRING */
 
 
 /*******************************************************************************
 * Function Name: USBUART_HandleStandardRqst
-********************************************************************************
+****************************************************************************//**
 *
-* Summary:
 *  This Routine dispatches standard requests
 *
-* Parameters:
-*  None.
 *
-* Return:
+* \return
 *  TRUE if request handled.
 *
-* Reentrant:
+* \reentrant
 *  No.
 *
 *******************************************************************************/
@@ -90,90 +86,116 @@ uint8 USBUART_HandleStandardRqst(void)
     uint8 requestHandled = USBUART_FALSE;
     uint8 interfaceNumber;
     uint8 configurationN;
-    #if defined(USBUART_ENABLE_STRINGS)
-        volatile uint8 *pStr = 0u;
-        #if defined(USBUART_ENABLE_DESCRIPTOR_STRINGS)
-            uint8 nStr;
-            uint8 descrLength;
-        #endif /* USBUART_ENABLE_DESCRIPTOR_STRINGS */
-    #endif /* USBUART_ENABLE_STRINGS */
+    uint8 bmRequestType = USBUART_bmRequestTypeReg;
+
+#if defined(USBUART_ENABLE_STRINGS)
+    volatile uint8 *pStr = 0u;
+    #if defined(USBUART_ENABLE_DESCRIPTOR_STRINGS)
+        uint8 nStr;
+        uint8 descrLength;
+    #endif /* (USBUART_ENABLE_DESCRIPTOR_STRINGS) */
+#endif /* (USBUART_ENABLE_STRINGS) */
+    
     static volatile uint8 USBUART_tBuffer[USBUART_STATUS_LENGTH_MAX];
     const T_USBUART_LUT CYCODE *pTmp;
+
     USBUART_currentTD.count = 0u;
 
-    if ((CY_GET_REG8(USBUART_bmRequestType) & USBUART_RQST_DIR_MASK) == USBUART_RQST_DIR_D2H)
+    if (USBUART_RQST_DIR_D2H == (bmRequestType & USBUART_RQST_DIR_MASK))
     {
         /* Control Read */
-        switch (CY_GET_REG8(USBUART_bRequest))
+        switch (USBUART_bRequestReg)
         {
             case USBUART_GET_DESCRIPTOR:
-                if (CY_GET_REG8(USBUART_wValueHi) == USBUART_DESCR_DEVICE)
+                if (USBUART_DESCR_DEVICE ==USBUART_wValueHiReg)
                 {
                     pTmp = USBUART_GetDeviceTablePtr();
                     USBUART_currentTD.pData = (volatile uint8 *)pTmp->p_list;
                     USBUART_currentTD.count = USBUART_DEVICE_DESCR_LENGTH;
+                    
                     requestHandled  = USBUART_InitControlRead();
                 }
-                else if (CY_GET_REG8(USBUART_wValueHi) == USBUART_DESCR_CONFIG)
+                else if (USBUART_DESCR_CONFIG == USBUART_wValueHiReg)
                 {
-                    pTmp = USBUART_GetConfigTablePtr(CY_GET_REG8(USBUART_wValueLo));
-                    if( pTmp != NULL )  /* Verify that requested descriptor exists */
+                    pTmp = USBUART_GetConfigTablePtr((uint8) USBUART_wValueLoReg);
+                    
+                    /* Verify that requested descriptor exists */
+                    if (pTmp != NULL)
                     {
                         USBUART_currentTD.pData = (volatile uint8 *)pTmp->p_list;
-                        USBUART_currentTD.count = ((uint16)(USBUART_currentTD.pData)[ \
-                                          USBUART_CONFIG_DESCR_TOTAL_LENGTH_HI] << 8u) | \
-                                         (USBUART_currentTD.pData)[USBUART_CONFIG_DESCR_TOTAL_LENGTH_LOW];
+                        USBUART_currentTD.count = (uint16)((uint16)(USBUART_currentTD.pData)[USBUART_CONFIG_DESCR_TOTAL_LENGTH_HI] << 8u) | \
+                                                                            (USBUART_currentTD.pData)[USBUART_CONFIG_DESCR_TOTAL_LENGTH_LOW];
                         requestHandled  = USBUART_InitControlRead();
                     }
                 }
-                #if defined(USBUART_ENABLE_STRINGS)
-                else if (CY_GET_REG8(USBUART_wValueHi) == USBUART_DESCR_STRING)
+                
+            #if(USBUART_BOS_ENABLE)
+                else if (USBUART_DESCR_BOS == USBUART_wValueHiReg)
                 {
-                    /* Descriptor Strings*/
-                    #if defined(USBUART_ENABLE_DESCRIPTOR_STRINGS)
-                        nStr = 0u;
-                        pStr = (volatile uint8 *)&USBUART_STRING_DESCRIPTORS[0u];
-                        while ( (CY_GET_REG8(USBUART_wValueLo) > nStr) && (*pStr != 0u) )
+                    pTmp = USBUART_GetBOSPtr();
+                    
+                    /* Verify that requested descriptor exists */
+                    if (pTmp != NULL)
+                    {
+                        USBUART_currentTD.pData = (volatile uint8 *)pTmp;
+                        USBUART_currentTD.count = ((uint16)((uint16)(USBUART_currentTD.pData)[USBUART_BOS_DESCR_TOTAL_LENGTH_HI] << 8u)) | \
+                                                                             (USBUART_currentTD.pData)[USBUART_BOS_DESCR_TOTAL_LENGTH_LOW];
+                        requestHandled  = USBUART_InitControlRead();
+                    }
+                }
+            #endif /*(USBUART_BOS_ENABLE)*/
+            
+            #if defined(USBUART_ENABLE_STRINGS)
+                else if (USBUART_DESCR_STRING == USBUART_wValueHiReg)
+                {
+                /* Descriptor Strings */
+                #if defined(USBUART_ENABLE_DESCRIPTOR_STRINGS)
+                    nStr = 0u;
+                    pStr = (volatile uint8 *) &USBUART_STRING_DESCRIPTORS[0u];
+                    
+                    while ((USBUART_wValueLoReg > nStr) && (*pStr != 0u))
+                    {
+                        /* Read descriptor length from 1st byte */
+                        descrLength = *pStr;
+                        /* Move to next string descriptor */
+                        pStr = &pStr[descrLength];
+                        nStr++;
+                    }
+                #endif /* (USBUART_ENABLE_DESCRIPTOR_STRINGS) */
+                
+                /* Microsoft OS String */
+                #if defined(USBUART_ENABLE_MSOS_STRING)
+                    if (USBUART_STRING_MSOS == USBUART_wValueLoReg)
+                    {
+                        pStr = (volatile uint8 *)& USBUART_MSOS_DESCRIPTOR[0u];
+                    }
+                #endif /* (USBUART_ENABLE_MSOS_STRING) */
+                
+                /* SN string */
+                #if defined(USBUART_ENABLE_SN_STRING)
+                    if ((USBUART_wValueLoReg != 0u) && 
+                        (USBUART_wValueLoReg == USBUART_DEVICE0_DESCR[USBUART_DEVICE_DESCR_SN_SHIFT]))
+                    {
+                    #if defined(USBUART_ENABLE_IDSN_STRING)
+                        /* Read DIE ID and generate string descriptor in RAM */
+                        USBUART_ReadDieID(USBUART_idSerialNumberStringDescriptor);
+                        pStr = USBUART_idSerialNumberStringDescriptor;
+                    #elif defined(USBUART_ENABLE_FWSN_STRING)
+                        
+                        if(USBUART_snStringConfirm != USBUART_FALSE)
                         {
-                            /* Read descriptor length from 1st byte */
-                            descrLength = *pStr;
-                            /* Move to next string descriptor */
-                            pStr = &pStr[descrLength];
-                            nStr++;
+                            pStr = USBUART_fwSerialNumberStringDescriptor;
                         }
-                    #endif /*  USBUART_ENABLE_DESCRIPTOR_STRINGS */
-                    /* Microsoft OS String*/
-                    #if defined(USBUART_ENABLE_MSOS_STRING)
-                        if( CY_GET_REG8(USBUART_wValueLo) == USBUART_STRING_MSOS )
+                        else
                         {
-                            pStr = (volatile uint8 *)&USBUART_MSOS_DESCRIPTOR[0u];
+                            pStr = (volatile uint8 *)&USBUART_SN_STRING_DESCRIPTOR[0u];
                         }
-                    #endif /*  USBUART_ENABLE_MSOS_STRING*/
-                    /* SN string */
-                    #if defined(USBUART_ENABLE_SN_STRING)
-                        if( (CY_GET_REG8(USBUART_wValueLo) != 0u) &&
-                            (CY_GET_REG8(USBUART_wValueLo) ==
-                            USBUART_DEVICE0_DESCR[USBUART_DEVICE_DESCR_SN_SHIFT]) )
-                        {
-
-                            #if defined(USBUART_ENABLE_IDSN_STRING)
-                                /* Read DIE ID and generate string descriptor in RAM */
-                                USBUART_ReadDieID(USBUART_idSerialNumberStringDescriptor);
-                                pStr = USBUART_idSerialNumberStringDescriptor;
-                            #elif defined(USBUART_ENABLE_FWSN_STRING)
-                                if(USBUART_snStringConfirm != USBUART_FALSE)
-                                {
-                                    pStr = USBUART_fwSerialNumberStringDescriptor;
-                                }
-                                else
-                                {
-                                    pStr = (volatile uint8 *)&USBUART_SN_STRING_DESCRIPTOR[0u];
-                                }
-                            #else
-                                pStr = (volatile uint8 *)&USBUART_SN_STRING_DESCRIPTOR[0u];
-                            #endif  /* defined(USBUART_ENABLE_IDSN_STRING) */
-                        }
-                    #endif    /*  USBUART_ENABLE_SN_STRING */
+                    #else
+                        pStr = (volatile uint8 *)&USBUART_SN_STRING_DESCRIPTOR[0u];
+                    #endif  /* (USBUART_ENABLE_IDSN_STRING) */
+                    }
+                #endif /* (USBUART_ENABLE_SN_STRING) */
+                
                     if (*pStr != 0u)
                     {
                         USBUART_currentTD.count = *pStr;
@@ -181,106 +203,123 @@ uint8 USBUART_HandleStandardRqst(void)
                         requestHandled  = USBUART_InitControlRead();
                     }
                 }
-                #endif /*  USBUART_ENABLE_STRINGS */
+            #endif /*  USBUART_ENABLE_STRINGS */
                 else
                 {
                     requestHandled = USBUART_DispatchClassRqst();
                 }
                 break;
+                
             case USBUART_GET_STATUS:
-                switch ((CY_GET_REG8(USBUART_bmRequestType) & USBUART_RQST_RCPT_MASK))
+                switch (bmRequestType & USBUART_RQST_RCPT_MASK)
                 {
                     case USBUART_RQST_RCPT_EP:
                         USBUART_currentTD.count = USBUART_EP_STATUS_LENGTH;
-                        USBUART_tBuffer[0u] = USBUART_EP[ \
-                                        CY_GET_REG8(USBUART_wIndexLo) & USBUART_DIR_UNUSED].hwEpState;
-                        USBUART_tBuffer[1u] = 0u;
+                        USBUART_tBuffer[0u]     = USBUART_EP[USBUART_wIndexLoReg & USBUART_DIR_UNUSED].hwEpState;
+                        USBUART_tBuffer[1u]     = 0u;
                         USBUART_currentTD.pData = &USBUART_tBuffer[0u];
+                        
                         requestHandled  = USBUART_InitControlRead();
                         break;
                     case USBUART_RQST_RCPT_DEV:
                         USBUART_currentTD.count = USBUART_DEVICE_STATUS_LENGTH;
-                        USBUART_tBuffer[0u] = USBUART_deviceStatus;
-                        USBUART_tBuffer[1u] = 0u;
+                        USBUART_tBuffer[0u]     = USBUART_deviceStatus;
+                        USBUART_tBuffer[1u]     = 0u;
                         USBUART_currentTD.pData = &USBUART_tBuffer[0u];
+                        
                         requestHandled  = USBUART_InitControlRead();
                         break;
                     default:    /* requestHandled is initialized as FALSE by default */
                         break;
                 }
                 break;
+                
             case USBUART_GET_CONFIGURATION:
                 USBUART_currentTD.count = 1u;
-                USBUART_currentTD.pData = (volatile uint8 *)&USBUART_configuration;
+                USBUART_currentTD.pData = (volatile uint8 *) &USBUART_configuration;
                 requestHandled  = USBUART_InitControlRead();
                 break;
+                
             case USBUART_GET_INTERFACE:
                 USBUART_currentTD.count = 1u;
-                USBUART_currentTD.pData = (volatile uint8 *)&USBUART_interfaceSetting[ \
-                                                                            CY_GET_REG8(USBUART_wIndexLo)];
+                USBUART_currentTD.pData = (volatile uint8 *) &USBUART_interfaceSetting[USBUART_wIndexLoReg];
                 requestHandled  = USBUART_InitControlRead();
                 break;
+                
             default: /* requestHandled is initialized as FALSE by default */
                 break;
         }
     }
-    else {
+    else
+    {
         /* Control Write */
-        switch (CY_GET_REG8(USBUART_bRequest))
+        switch (USBUART_bRequestReg)
         {
             case USBUART_SET_ADDRESS:
-                USBUART_deviceAddress = CY_GET_REG8(USBUART_wValueLo);
+                /* Store address to be set in USBUART_NoDataControlStatusStage(). */
+                USBUART_deviceAddress = (uint8) USBUART_wValueLoReg;
                 requestHandled = USBUART_InitNoDataControlTransfer();
                 break;
+                
             case USBUART_SET_CONFIGURATION:
-                configurationN = CY_GET_REG8(USBUART_wValueLo);
+                configurationN = USBUART_wValueLoReg;
+                
+                /* Verify that configuration descriptor exists */
                 if(configurationN > 0u)
-                {   /* Verify that configuration descriptor exists */
-                    pTmp = USBUART_GetConfigTablePtr(configurationN - 1u);
+                {
+                    pTmp = USBUART_GetConfigTablePtr((uint8) configurationN - 1u);
                 }
+                
                 /* Responds with a Request Error when configuration number is invalid */
                 if (((configurationN > 0u) && (pTmp != NULL)) || (configurationN == 0u))
                 {
                     /* Set new configuration if it has been changed */
                     if(configurationN != USBUART_configuration)
                     {
-                        USBUART_configuration = configurationN;
+                        USBUART_configuration = (uint8) configurationN;
                         USBUART_configurationChanged = USBUART_TRUE;
                         USBUART_Config(USBUART_TRUE);
                     }
                     requestHandled = USBUART_InitNoDataControlTransfer();
                 }
                 break;
+                
             case USBUART_SET_INTERFACE:
-                if (USBUART_ValidateAlternateSetting() != 0u)
+                if (0u != USBUART_ValidateAlternateSetting())
                 {
-                    interfaceNumber = CY_GET_REG8(USBUART_wIndexLo);
-                    USBUART_interfaceNumber = interfaceNumber;
-                    USBUART_configurationChanged = USBUART_TRUE;
-                    #if ((USBUART_EP_MA == USBUART__MA_DYNAMIC) && \
-                         (USBUART_EP_MM == USBUART__EP_MANUAL) )
+                    /* Get interface number from the request. */
+                    interfaceNumber = USBUART_wIndexLoReg;
+                    USBUART_interfaceNumber = (uint8) USBUART_wIndexLoReg;
+                     
+                    /* Check if alternate settings is changed for interface. */
+                    if (USBUART_interfaceSettingLast[interfaceNumber] != USBUART_interfaceSetting[interfaceNumber])
+                    {
+                        USBUART_configurationChanged = USBUART_TRUE;
+                    
+                        /* Change alternate setting for the endpoints. */
+                    #if (USBUART_EP_MANAGEMENT_MANUAL && USBUART_EP_ALLOC_DYNAMIC)
                         USBUART_Config(USBUART_FALSE);
                     #else
                         USBUART_ConfigAltChanged();
-                    #endif /*  (USBUART_EP_MA == USBUART__MA_DYNAMIC) */
-                    /* Update handled Alt setting changes status */
-                    USBUART_interfaceSetting_last[interfaceNumber] =
-                         USBUART_interfaceSetting[interfaceNumber];
+                    #endif /* (USBUART_EP_MANAGEMENT_MANUAL && USBUART_EP_ALLOC_DYNAMIC) */
+                    }
+                    
                     requestHandled = USBUART_InitNoDataControlTransfer();
                 }
                 break;
+                
             case USBUART_CLEAR_FEATURE:
-                switch (CY_GET_REG8(USBUART_bmRequestType) & USBUART_RQST_RCPT_MASK)
+                switch (bmRequestType & USBUART_RQST_RCPT_MASK)
                 {
                     case USBUART_RQST_RCPT_EP:
-                        if (CY_GET_REG8(USBUART_wValueLo) == USBUART_ENDPOINT_HALT)
+                        if (USBUART_wValueLoReg == USBUART_ENDPOINT_HALT)
                         {
                             requestHandled = USBUART_ClearEndpointHalt();
                         }
                         break;
                     case USBUART_RQST_RCPT_DEV:
                         /* Clear device REMOTE_WAKEUP */
-                        if (CY_GET_REG8(USBUART_wValueLo) == USBUART_DEVICE_REMOTE_WAKEUP)
+                        if (USBUART_wValueLoReg == USBUART_DEVICE_REMOTE_WAKEUP)
                         {
                             USBUART_deviceStatus &= (uint8)~USBUART_DEVICE_STATUS_REMOTE_WAKEUP;
                             requestHandled = USBUART_InitNoDataControlTransfer();
@@ -288,10 +327,9 @@ uint8 USBUART_HandleStandardRqst(void)
                         break;
                     case USBUART_RQST_RCPT_IFC:
                         /* Validate interfaceNumber */
-                        if (CY_GET_REG8(USBUART_wIndexLo) < USBUART_MAX_INTERFACES_NUMBER)
+                        if (USBUART_wIndexLoReg < USBUART_MAX_INTERFACES_NUMBER)
                         {
-                            USBUART_interfaceStatus[CY_GET_REG8(USBUART_wIndexLo)] &=
-                                                                (uint8)~(CY_GET_REG8(USBUART_wValueLo));
+                            USBUART_interfaceStatus[USBUART_wIndexLoReg] &= (uint8) ~USBUART_wValueLoReg;
                             requestHandled = USBUART_InitNoDataControlTransfer();
                         }
                         break;
@@ -299,396 +337,422 @@ uint8 USBUART_HandleStandardRqst(void)
                         break;
                 }
                 break;
+                
             case USBUART_SET_FEATURE:
-                switch (CY_GET_REG8(USBUART_bmRequestType) & USBUART_RQST_RCPT_MASK)
+                switch (bmRequestType & USBUART_RQST_RCPT_MASK)
                 {
                     case USBUART_RQST_RCPT_EP:
-                        if (CY_GET_REG8(USBUART_wValueLo) == USBUART_ENDPOINT_HALT)
+                        if (USBUART_wValueLoReg == USBUART_ENDPOINT_HALT)
                         {
                             requestHandled = USBUART_SetEndpointHalt();
                         }
                         break;
+                        
                     case USBUART_RQST_RCPT_DEV:
                         /* Set device REMOTE_WAKEUP */
-                        if (CY_GET_REG8(USBUART_wValueLo) == USBUART_DEVICE_REMOTE_WAKEUP)
+                        if (USBUART_wValueLoReg == USBUART_DEVICE_REMOTE_WAKEUP)
                         {
                             USBUART_deviceStatus |= USBUART_DEVICE_STATUS_REMOTE_WAKEUP;
                             requestHandled = USBUART_InitNoDataControlTransfer();
                         }
                         break;
+                        
                     case USBUART_RQST_RCPT_IFC:
                         /* Validate interfaceNumber */
-                        if (CY_GET_REG8(USBUART_wIndexLo) < USBUART_MAX_INTERFACES_NUMBER)
+                        if (USBUART_wIndexLoReg < USBUART_MAX_INTERFACES_NUMBER)
                         {
-                            USBUART_interfaceStatus[CY_GET_REG8(USBUART_wIndexLo)] &=
-                                                                (uint8)~(CY_GET_REG8(USBUART_wValueLo));
+                            USBUART_interfaceStatus[USBUART_wIndexLoReg] &= (uint8) ~USBUART_wValueLoReg;
                             requestHandled = USBUART_InitNoDataControlTransfer();
                         }
                         break;
+                    
                     default:    /* requestHandled is initialized as FALSE by default */
                         break;
                 }
                 break;
+                
             default:    /* requestHandled is initialized as FALSE by default */
                 break;
         }
     }
-    return(requestHandled);
+    
+    return (requestHandled);
 }
 
 
 #if defined(USBUART_ENABLE_IDSN_STRING)
-
     /***************************************************************************
     * Function Name: USBUART_ReadDieID
-    ****************************************************************************
+    ************************************************************************//**
     *
-    * Summary:
     *  This routine read Die ID and generate Serial Number string descriptor.
     *
-    * Parameters:
-    *  descr:  pointer on string descriptor.
+    *  \param descr:  pointer on string descriptor. This string size has to be equal or
+    *          greater than USBUART_IDSN_DESCR_LENGTH.
     *
-    * Return:
-    *  None.
     *
-    * Reentrant:
+    * \reentrant
     *  No.
     *
     ***************************************************************************/
     void USBUART_ReadDieID(uint8 descr[]) 
     {
+        const char8 CYCODE hex[] = "0123456789ABCDEF";
         uint8 i;
         uint8 j = 0u;
-        uint8 value;
-        const char8 CYCODE hex[16u] = "0123456789ABCDEF";
+        uint8 uniqueId[8u];
 
-        /* Check descriptor validation */
-        if( descr != NULL)
+        if (NULL != descr)
         {
+            /* Initialize descriptor header. */
             descr[0u] = USBUART_IDSN_DESCR_LENGTH;
             descr[1u] = USBUART_DESCR_STRING;
+            
+            /* Unique ID size is 8 bytes. */
+            CyGetUniqueId((uint32 *) uniqueId);
 
-            /* fill descriptor */
-            for(i = 2u; i < USBUART_IDSN_DESCR_LENGTH; i += 4u)
+            /* Fill descriptor with unique device ID. */
+            for (i = 2u; i < USBUART_IDSN_DESCR_LENGTH; i += 4u)
             {
-                value = CY_GET_XTND_REG8((void CYFAR *)(USBUART_DIE_ID + j));
-                j++;
-                descr[i] = (uint8)hex[value >> 4u];
-                descr[i + 2u] = (uint8)hex[value & 0x0Fu];
+                descr[i]      = (uint8) hex[(uniqueId[j] >> 4u)];
+                descr[i + 1u] = 0u;
+                descr[i + 2u] = (uint8) hex[(uniqueId[j] & 0x0Fu)];
+                descr[i + 3u] = 0u;
+                ++j;
             }
         }
     }
-
-#endif /*  USBUART_ENABLE_IDSN_STRING */
+#endif /* (USBUART_ENABLE_IDSN_STRING) */
 
 
 /*******************************************************************************
 * Function Name: USBUART_ConfigReg
-********************************************************************************
+****************************************************************************//**
 *
-* Summary:
 *  This routine configures hardware registers from the variables.
 *  It is called from USBUART_Config() function and from RestoreConfig
 *  after Wakeup.
-*
-* Parameters:
-*  None.
-*
-* Return:
-*  None.
 *
 *******************************************************************************/
 void USBUART_ConfigReg(void) 
 {
     uint8 ep;
-    uint8 i;
-    #if(USBUART_EP_MM == USBUART__EP_DMAAUTO)
-        uint8 epType = 0u;
-    #endif /*  USBUART_EP_MM == USBUART__EP_DMAAUTO */
 
-    /* Set the endpoint buffer addresses */
-    ep = USBUART_EP1;
-    for (i = 0u; i < 0x80u; i+= 0x10u)
+#if (USBUART_EP_MANAGEMENT_DMA_AUTO)
+    uint8 epType = 0u;
+#endif /* (USBUART_EP_MANAGEMENT_DMA_AUTO) */
+
+    /* Go thought all endpoints and set hardware configuration */
+    for (ep = USBUART_EP1; ep < USBUART_MAX_EP; ++ep)
     {
-        CY_SET_REG8((reg8 *)(USBUART_ARB_EP1_CFG_IND + i), USBUART_ARB_EPX_CFG_DEFAULT);
-        #if(USBUART_EP_MM != USBUART__EP_MANUAL)
-            /* Enable all Arbiter EP Interrupts : err, buf under, buf over, dma gnt(mode2 only), in buf full */
-            CY_SET_REG8((reg8 *)(USBUART_ARB_EP1_INT_EN_IND + i), USBUART_ARB_EPX_INT_MASK);
-        #endif   /*  USBUART_EP_MM != USBUART__EP_MANUAL */
-
-        if(USBUART_EP[ep].epMode != USBUART_MODE_DISABLE)
+        USBUART_ARB_EP_BASE.arbEp[ep].epCfg = USBUART_ARB_EPX_CFG_DEFAULT;
+        
+    #if (USBUART_EP_MANAGEMENT_DMA)
+        /* Enable arbiter endpoint interrupt sources */
+        USBUART_ARB_EP_BASE.arbEp[ep].epIntEn = USBUART_ARB_EPX_INT_MASK;
+    #endif /* (USBUART_EP_MANAGEMENT_DMA) */
+    
+        if (USBUART_EP[ep].epMode != USBUART_MODE_DISABLE)
         {
-            if((USBUART_EP[ep].addr & USBUART_DIR_IN) != 0u )
+            if (0u != (USBUART_EP[ep].addr & USBUART_DIR_IN))
             {
-                CY_SET_REG8((reg8 *)(USBUART_SIE_EP1_CR0_IND + i), USBUART_MODE_NAK_IN);
+                USBUART_SIE_EP_BASE.sieEp[ep].epCr0 = USBUART_MODE_NAK_IN;
+                
+            #if (USBUART_EP_MANAGEMENT_DMA_AUTO && CY_PSOC4)
+                /* Clear DMA_TERMIN for IN endpoint. */
+                USBUART_ARB_EP_BASE.arbEp[ep].epIntEn &= (uint32) ~USBUART_ARB_EPX_INT_DMA_TERMIN;
+            #endif /* (USBUART_EP_MANAGEMENT_DMA_AUTO && CY_PSOC4) */
             }
             else
             {
-                CY_SET_REG8((reg8 *)(USBUART_SIE_EP1_CR0_IND + i), USBUART_MODE_NAK_OUT);
-                /* Prepare EP type mask for automatic memory allocation */
-                #if(USBUART_EP_MM == USBUART__EP_DMAAUTO)
-                    epType |= (uint8)(0x01u << (ep - USBUART_EP1));
-                #endif /*  USBUART_EP_MM == USBUART__EP_DMAAUTO */
+                USBUART_SIE_EP_BASE.sieEp[ep].epCr0 = USBUART_MODE_NAK_OUT;
+
+            #if (USBUART_EP_MANAGEMENT_DMA_AUTO)
+                /* (CY_PSOC4): DMA_TERMIN for OUT endpoint is set above. */
+                
+                /* Prepare endpoint type mask. */
+                epType |= (uint8) (0x01u << (ep - USBUART_EP1));
+            #endif /* (USBUART_EP_MANAGEMENT_DMA_AUTO) */
             }
         }
         else
         {
-            CY_SET_REG8((reg8 *)(USBUART_SIE_EP1_CR0_IND + i), USBUART_MODE_STALL_DATA_EP);
+            USBUART_SIE_EP_BASE.sieEp[ep].epCr0 = USBUART_MODE_STALL_DATA_EP;
         }
-
-        #if(USBUART_EP_MM != USBUART__EP_DMAAUTO)
-            CY_SET_REG8((reg8 *)(USBUART_SIE_EP1_CNT0_IND + i),   USBUART_EP[ep].bufferSize >> 8u);
-            CY_SET_REG8((reg8 *)(USBUART_SIE_EP1_CNT1_IND + i),   USBUART_EP[ep].bufferSize & 0xFFu);
-
-            CY_SET_REG8((reg8 *)(USBUART_ARB_RW1_RA_IND + i),     USBUART_EP[ep].buffOffset & 0xFFu);
-            CY_SET_REG8((reg8 *)(USBUART_ARB_RW1_RA_MSB_IND + i), USBUART_EP[ep].buffOffset >> 8u);
-            CY_SET_REG8((reg8 *)(USBUART_ARB_RW1_WA_IND + i),     USBUART_EP[ep].buffOffset & 0xFFu);
-            CY_SET_REG8((reg8 *)(USBUART_ARB_RW1_WA_MSB_IND + i), USBUART_EP[ep].buffOffset >> 8u);
-        #endif /*  USBUART_EP_MM != USBUART__EP_DMAAUTO */
-
-        ep++;
+        
+    #if (!USBUART_EP_MANAGEMENT_DMA_AUTO)
+        #if (CY_PSOC4)
+            USBUART_ARB_EP16_BASE.arbEp[ep].rwRa16  = (uint32) USBUART_EP[ep].buffOffset;
+            USBUART_ARB_EP16_BASE.arbEp[ep].rwWa16  = (uint32) USBUART_EP[ep].buffOffset;
+        #else
+            USBUART_ARB_EP_BASE.arbEp[ep].rwRa    = LO8(USBUART_EP[ep].buffOffset);
+            USBUART_ARB_EP_BASE.arbEp[ep].rwRaMsb = HI8(USBUART_EP[ep].buffOffset);
+            USBUART_ARB_EP_BASE.arbEp[ep].rwWa    = LO8(USBUART_EP[ep].buffOffset);
+            USBUART_ARB_EP_BASE.arbEp[ep].rwWaMsb = HI8(USBUART_EP[ep].buffOffset);
+        #endif /* (CY_PSOC4) */
+    #endif /* (!USBUART_EP_MANAGEMENT_DMA_AUTO) */
     }
 
-    #if(USBUART_EP_MM == USBUART__EP_DMAAUTO)
-         /* BUF_SIZE depend on DMA_THRESS value: 55-32 bytes  44-16 bytes 33-8 bytes 22-4 bytes 11-2 bytes */
-        USBUART_BUF_SIZE_REG = USBUART_DMA_BUF_SIZE;
-        USBUART_DMA_THRES_REG = USBUART_DMA_BYTES_PER_BURST;   /* DMA burst threshold */
-        USBUART_DMA_THRES_MSB_REG = 0u;
-        USBUART_EP_ACTIVE_REG = USBUART_ARB_INT_MASK;
-        USBUART_EP_TYPE_REG = epType;
-        /* Cfg_cmp bit set to 1 once configuration is complete. */
-        USBUART_ARB_CFG_REG = USBUART_ARB_CFG_AUTO_DMA | USBUART_ARB_CFG_AUTO_MEM |
-                                       USBUART_ARB_CFG_CFG_CPM;
-        /* Cfg_cmp bit set to 0 during configuration of PFSUSB Registers. */
-        USBUART_ARB_CFG_REG = USBUART_ARB_CFG_AUTO_DMA | USBUART_ARB_CFG_AUTO_MEM;
-    #endif /*  USBUART_EP_MM == USBUART__EP_DMAAUTO */
+#if (USBUART_EP_MANAGEMENT_DMA_AUTO)
+     /* BUF_SIZE depend on DMA_THRESS value:0x55-32 bytes  0x44-16 bytes 0x33-8 bytes 0x22-4 bytes 0x11-2 bytes */
+    USBUART_BUF_SIZE_REG = USBUART_DMA_BUF_SIZE;
 
-    CY_SET_REG8(USBUART_SIE_EP_INT_EN_PTR, 0xFFu);
+    /* Configure DMA burst threshold */
+#if (CY_PSOC4)
+    USBUART_DMA_THRES16_REG   = USBUART_DMA_BYTES_PER_BURST;
+#else
+    USBUART_DMA_THRES_REG     = USBUART_DMA_BYTES_PER_BURST;
+    USBUART_DMA_THRES_MSB_REG = 0u;
+#endif /* (CY_PSOC4) */
+    USBUART_EP_ACTIVE_REG = USBUART_DEFAULT_ARB_INT_EN;
+    USBUART_EP_TYPE_REG   = epType;
+    
+    /* Cfg_cmp bit set to 1 once configuration is complete. */
+    /* Lock arbiter configtuation */
+    USBUART_ARB_CFG_REG |= (uint8)  USBUART_ARB_CFG_CFG_CMP;
+    /* Cfg_cmp bit set to 0 during configuration of PFSUSB Registers. */
+    USBUART_ARB_CFG_REG &= (uint8) ~USBUART_ARB_CFG_CFG_CMP;
+
+#endif /* (USBUART_EP_MANAGEMENT_DMA_AUTO) */
+
+    /* Enable interrupt SIE interurpt source from EP0-EP1 */
+    USBUART_SIE_EP_INT_EN_REG = (uint8) USBUART_DEFAULT_SIE_EP_INT_EN;
+}
+
+
+/*******************************************************************************
+* Function Name: USBUART_EpStateInit
+****************************************************************************//**
+*
+*  This routine initialize state of Data end points based of its type: 
+*   IN  - USBUART_IN_BUFFER_EMPTY (USBUART_EVENT_PENDING)
+*   OUT - USBUART_OUT_BUFFER_EMPTY (USBUART_NO_EVENT_PENDING)
+*
+*******************************************************************************/
+void USBUART_EpStateInit(void) 
+{
+    uint8 i;
+
+    for (i = USBUART_EP1; i < USBUART_MAX_EP; i++)
+    { 
+        if (0u != (USBUART_EP[i].addr & USBUART_DIR_IN))
+        {
+            /* IN Endpoint */
+            USBUART_EP[i].apiEpState = USBUART_EVENT_PENDING;
+        }
+        else
+        {
+            /* OUT Endpoint */
+            USBUART_EP[i].apiEpState = USBUART_NO_EVENT_PENDING;
+        }
+    }
+                    
 }
 
 
 /*******************************************************************************
 * Function Name: USBUART_Config
-********************************************************************************
+****************************************************************************//**
 *
-* Summary:
 *  This routine configures endpoints for the entire configuration by scanning
 *  the configuration descriptor.
 *
-* Parameters:
-*  clearAltSetting: It configures the bAlternateSetting 0 for each interface.
-*
-* Return:
-*  None.
+*  \param clearAltSetting: It configures the bAlternateSetting 0 for each interface.
 *
 * USBUART_interfaceClass - Initialized class array for each interface.
 *   It is used for handling Class specific requests depend on interface class.
 *   Different classes in multiple Alternate settings does not supported.
 *
-* Reentrant:
+* \reentrant
 *  No.
 *
 *******************************************************************************/
 void USBUART_Config(uint8 clearAltSetting) 
 {
     uint8 ep;
-    uint8 cur_ep;
+    uint8 curEp;
     uint8 i;
     uint8 epType;
     const uint8 *pDescr;
-    #if(USBUART_EP_MM != USBUART__EP_DMAAUTO)
+    
+    #if (!USBUART_EP_MANAGEMENT_DMA_AUTO)
         uint16 buffCount = 0u;
-    #endif /*  USBUART_EP_MM != USBUART__EP_DMAAUTO */
+    #endif /* (!USBUART_EP_MANAGEMENT_DMA_AUTO) */
 
     const T_USBUART_LUT CYCODE *pTmp;
     const T_USBUART_EP_SETTINGS_BLOCK CYCODE *pEP;
 
-    /* Clear all of the endpoints */
-    for (ep = 0u; ep < USBUART_MAX_EP; ep++)
+    /* Clear endpoints settings */
+    for (ep = 0u; ep < USBUART_MAX_EP; ++ep)
     {
-        USBUART_EP[ep].attrib = 0u;
-        USBUART_EP[ep].hwEpState = 0u;
-        USBUART_EP[ep].apiEpState = USBUART_NO_EVENT_PENDING;
-        USBUART_EP[ep].epToggle = 0u;
-        USBUART_EP[ep].epMode = USBUART_MODE_DISABLE;
+        USBUART_EP[ep].attrib     = 0u;
+        USBUART_EP[ep].hwEpState  = 0u;
+        USBUART_EP[ep].epToggle   = 0u;
         USBUART_EP[ep].bufferSize = 0u;
-        USBUART_EP[ep].interface = 0u;
-
+        USBUART_EP[ep].interface  = 0u;
+        USBUART_EP[ep].apiEpState = USBUART_NO_EVENT_PENDING;
+        USBUART_EP[ep].epMode     = USBUART_MODE_DISABLE;   
     }
 
-    /* Clear Alternate settings for all interfaces */
-    if(clearAltSetting != 0u)
+    /* Clear Alternate settings for all interfaces. */
+    if (0u != clearAltSetting)
     {
-        for (i = 0u; i < USBUART_MAX_INTERFACES_NUMBER; i++)
+        for (i = 0u; i < USBUART_MAX_INTERFACES_NUMBER; ++i)
         {
-            USBUART_interfaceSetting[i] = 0x00u;
-            USBUART_interfaceSetting_last[i] = 0x00u;
+            USBUART_interfaceSetting[i]     = 0u;
+            USBUART_interfaceSettingLast[i] = 0u;
         }
     }
 
     /* Init Endpoints and Device Status if configured */
-    if(USBUART_configuration > 0u)
+    if (USBUART_configuration > 0u)
     {
+        #if defined(USBUART_ENABLE_CDC_CLASS)
+            uint8 cdcComNums = 0u;
+        #endif  /* (USBUART_ENABLE_CDC_CLASS) */  
+
         pTmp = USBUART_GetConfigTablePtr(USBUART_configuration - 1u);
+        
         /* Set Power status for current configuration */
         pDescr = (const uint8 *)pTmp->p_list;
-        if((pDescr[USBUART_CONFIG_DESCR_ATTRIB] & USBUART_CONFIG_DESCR_ATTRIB_SELF_POWERED) != 0u)
+        if ((pDescr[USBUART_CONFIG_DESCR_ATTRIB] & USBUART_CONFIG_DESCR_ATTRIB_SELF_POWERED) != 0u)
         {
-            USBUART_deviceStatus |=  USBUART_DEVICE_STATUS_SELF_POWERED;
+            USBUART_deviceStatus |= (uint8)  USBUART_DEVICE_STATUS_SELF_POWERED;
         }
         else
         {
-            USBUART_deviceStatus &=  (uint8)~USBUART_DEVICE_STATUS_SELF_POWERED;
+            USBUART_deviceStatus &= (uint8) ~USBUART_DEVICE_STATUS_SELF_POWERED;
         }
+        
         /* Move to next element */
         pTmp = &pTmp[1u];
         ep = pTmp->c;  /* For this table, c is the number of endpoints configurations  */
 
-        #if ((USBUART_EP_MA == USBUART__MA_DYNAMIC) && \
-             (USBUART_EP_MM == USBUART__EP_MANUAL) )
+        #if (USBUART_EP_MANAGEMENT_MANUAL && USBUART_EP_ALLOC_DYNAMIC)
             /* Configure for dynamic EP memory allocation */
             /* p_list points the endpoint setting table. */
             pEP = (T_USBUART_EP_SETTINGS_BLOCK *) pTmp->p_list;
+            
             for (i = 0u; i < ep; i++)
-            {
+            {     
                 /* Compare current Alternate setting with EP Alt */
-                if(USBUART_interfaceSetting[pEP->interface] == pEP->altSetting)
-                {
-                    cur_ep = pEP->addr & USBUART_DIR_UNUSED;
+                if (USBUART_interfaceSetting[pEP->interface] == pEP->altSetting)
+                {                                                          
+                    curEp  = pEP->addr & USBUART_DIR_UNUSED;
                     epType = pEP->attributes & USBUART_EP_TYPE_MASK;
-                    if (pEP->addr & USBUART_DIR_IN)
+                    
+                    USBUART_EP[curEp].addr       = pEP->addr;
+                    USBUART_EP[curEp].attrib     = pEP->attributes;
+                    USBUART_EP[curEp].bufferSize = pEP->bufferSize;
+
+                    if (0u != (pEP->addr & USBUART_DIR_IN))
                     {
                         /* IN Endpoint */
-                        USBUART_EP[cur_ep].apiEpState = USBUART_EVENT_PENDING;
-                        USBUART_EP[cur_ep].epMode = (epType == USBUART_EP_TYPE_ISOC) ?
-                                                        USBUART_MODE_ISO_IN : USBUART_MODE_ACK_IN;
-                        #if defined(USBUART_ENABLE_CDC_CLASS)
-                            if(((pEP->bMisc == USBUART_CLASS_CDC_DATA) ||
-                                (pEP->bMisc == USBUART_CLASS_CDC)) &&
-                                (epType != USBUART_EP_TYPE_INT))
-                            {
-                                USBUART_cdc_data_in_ep = cur_ep;
-                            }
-                        #endif  /*  USBUART_ENABLE_CDC_CLASS*/
-                        #if ( defined(USBUART_ENABLE_MIDI_STREAMING) && \
-                                             (USBUART_MIDI_IN_BUFF_SIZE > 0) )
-                            if((pEP->bMisc == USBUART_CLASS_AUDIO) &&
-                               (epType == USBUART_EP_TYPE_BULK))
-                            {
-                                USBUART_midi_in_ep = cur_ep;
-                            }
-                        #endif  /*  USBUART_ENABLE_MIDI_STREAMING*/
+                        USBUART_EP[curEp].epMode     = USBUART_GET_ACTIVE_IN_EP_CR0_MODE(epType);
+                        USBUART_EP[curEp].apiEpState = USBUART_EVENT_PENDING;
+                    
+                    #if (defined(USBUART_ENABLE_MIDI_STREAMING) && (USBUART_MIDI_IN_BUFF_SIZE > 0))
+                        if ((pEP->bMisc == USBUART_CLASS_AUDIO) && (epType == USBUART_EP_TYPE_BULK))
+                        {
+                            USBUART_midi_in_ep = curEp;
+                        }
+                    #endif  /* (USBUART_ENABLE_MIDI_STREAMING) */
                     }
                     else
                     {
                         /* OUT Endpoint */
-                        USBUART_EP[cur_ep].apiEpState = USBUART_NO_EVENT_PENDING;
-                        USBUART_EP[cur_ep].epMode = (epType == USBUART_EP_TYPE_ISOC) ?
-                                                    USBUART_MODE_ISO_OUT : USBUART_MODE_ACK_OUT;
-                        #if defined(USBUART_ENABLE_CDC_CLASS)
-                            if(((pEP->bMisc == USBUART_CLASS_CDC_DATA) ||
-                                (pEP->bMisc == USBUART_CLASS_CDC)) &&
-                                (epType != USBUART_EP_TYPE_INT))
-                            {
-                                USBUART_cdc_data_out_ep = cur_ep;
-                            }
-                        #endif  /*  USBUART_ENABLE_CDC_CLASS*/
-                        #if ( defined(USBUART_ENABLE_MIDI_STREAMING) && \
-                                     (USBUART_MIDI_OUT_BUFF_SIZE > 0) )
-                            if((pEP->bMisc == USBUART_CLASS_AUDIO) &&
-                               (epType == USBUART_EP_TYPE_BULK))
-                            {
-                                USBUART_midi_out_ep = cur_ep;
-                            }
-                        #endif  /*  USBUART_ENABLE_MIDI_STREAMING*/
+                        USBUART_EP[curEp].epMode     = USBUART_GET_ACTIVE_OUT_EP_CR0_MODE(epType);
+                        USBUART_EP[curEp].apiEpState = USBUART_NO_EVENT_PENDING;
+                        
+                    #if (defined(USBUART_ENABLE_MIDI_STREAMING) && (USBUART_MIDI_OUT_BUFF_SIZE > 0))
+                        if ((pEP->bMisc == USBUART_CLASS_AUDIO) && (epType == USBUART_EP_TYPE_BULK))
+                        {
+                            USBUART_midi_out_ep = curEp;
+                        }
+                    #endif  /* (USBUART_ENABLE_MIDI_STREAMING) */
                     }
-                    USBUART_EP[cur_ep].bufferSize = pEP->bufferSize;
-                    USBUART_EP[cur_ep].addr = pEP->addr;
-                    USBUART_EP[cur_ep].attrib = pEP->attributes;
+
+                #if(defined (USBUART_ENABLE_CDC_CLASS))
+                    if((pEP->bMisc == USBUART_CLASS_CDC_DATA) ||(pEP->bMisc == USBUART_CLASS_CDC))
+                    {
+                        cdcComNums = USBUART_Cdc_EpInit(pEP, curEp, cdcComNums);
+                    }
+                #endif  /* (USBUART_ENABLE_CDC_CLASS) */
                 }
+                
                 pEP = &pEP[1u];
             }
-        #else /* Configure for static EP memory allocation  */
-            for (i = USBUART_EP1; i < USBUART_MAX_EP; i++)
+            
+        #else
+            for (i = USBUART_EP1; i < USBUART_MAX_EP; ++i)
             {
                 /* p_list points the endpoint setting table. */
                 pEP = (const T_USBUART_EP_SETTINGS_BLOCK CYCODE *) pTmp->p_list;
                 /* Find max length for each EP and select it (length could be different in different Alt settings) */
                 /* but other settings should be correct with regards to Interface alt Setting */
-                for (cur_ep = 0u; cur_ep < ep; cur_ep++)
+                
+                for (curEp = 0u; curEp < ep; ++curEp)
                 {
-                    /* EP count is equal to EP # in table and we found larger EP length than have before*/
-                    if(i == (pEP->addr & USBUART_DIR_UNUSED))
+                    if (i == (pEP->addr & USBUART_DIR_UNUSED))
                     {
-                        if(USBUART_EP[i].bufferSize < pEP->bufferSize)
+                        /* Compare endpoint buffers size with current size to find greater. */
+                        if (USBUART_EP[i].bufferSize < pEP->bufferSize)
                         {
                             USBUART_EP[i].bufferSize = pEP->bufferSize;
                         }
-                        /* Compare current Alternate setting with EP Alt*/
-                        if(USBUART_interfaceSetting[pEP->interface] == pEP->altSetting)
-                        {
+                        
+                        /* Compare current Alternate setting with EP Alt */
+                        if (USBUART_interfaceSetting[pEP->interface] == pEP->altSetting)
+                        {                            
+                            USBUART_EP[i].addr = pEP->addr;
+                            USBUART_EP[i].attrib = pEP->attributes;
+                            
                             epType = pEP->attributes & USBUART_EP_TYPE_MASK;
-                            if ((pEP->addr & USBUART_DIR_IN) != 0u)
+                            
+                            if (0u != (pEP->addr & USBUART_DIR_IN))
                             {
                                 /* IN Endpoint */
+                                USBUART_EP[i].epMode     = USBUART_GET_ACTIVE_IN_EP_CR0_MODE(epType);
                                 USBUART_EP[i].apiEpState = USBUART_EVENT_PENDING;
-                                USBUART_EP[i].epMode = (epType == USBUART_EP_TYPE_ISOC) ?
-                                                        USBUART_MODE_ISO_IN : USBUART_MODE_ACK_IN;
-                                /* Find and initialize CDC IN endpoint number */
-                                #if defined(USBUART_ENABLE_CDC_CLASS)
-                                    if(((pEP->bMisc == USBUART_CLASS_CDC_DATA) ||
-                                        (pEP->bMisc == USBUART_CLASS_CDC)) &&
-                                        (epType != USBUART_EP_TYPE_INT))
-                                    {
-                                        USBUART_cdc_data_in_ep = i;
-                                    }
-                                #endif  /*  USBUART_ENABLE_CDC_CLASS*/
-                                #if ( defined(USBUART_ENABLE_MIDI_STREAMING) && \
-                                             (USBUART_MIDI_IN_BUFF_SIZE > 0) )
-                                    if((pEP->bMisc == USBUART_CLASS_AUDIO) &&
-                                       (epType == USBUART_EP_TYPE_BULK))
-                                    {
-                                        USBUART_midi_in_ep = i;
-                                    }
-                                #endif  /*  USBUART_ENABLE_MIDI_STREAMING*/
+                                
+                            #if (defined(USBUART_ENABLE_MIDI_STREAMING) && (USBUART_MIDI_IN_BUFF_SIZE > 0))
+                                if ((pEP->bMisc == USBUART_CLASS_AUDIO) && (epType == USBUART_EP_TYPE_BULK))
+                                {
+                                    USBUART_midi_in_ep = i;
+                                }
+                            #endif  /* (USBUART_ENABLE_MIDI_STREAMING) */
                             }
                             else
                             {
                                 /* OUT Endpoint */
+                                USBUART_EP[i].epMode     = USBUART_GET_ACTIVE_OUT_EP_CR0_MODE(epType);
                                 USBUART_EP[i].apiEpState = USBUART_NO_EVENT_PENDING;
-                                USBUART_EP[i].epMode = (epType == USBUART_EP_TYPE_ISOC) ?
-                                                    USBUART_MODE_ISO_OUT : USBUART_MODE_ACK_OUT;
-                                /* Find and initialize CDC IN endpoint number */
-                                #if defined(USBUART_ENABLE_CDC_CLASS)
-                                    if(((pEP->bMisc == USBUART_CLASS_CDC_DATA) ||
-                                        (pEP->bMisc == USBUART_CLASS_CDC)) &&
-                                        (epType != USBUART_EP_TYPE_INT))
-                                    {
-                                        USBUART_cdc_data_out_ep = i;
-                                    }
-                                #endif  /*  USBUART_ENABLE_CDC_CLASS*/
-                                #if ( defined(USBUART_ENABLE_MIDI_STREAMING) && \
-                                             (USBUART_MIDI_OUT_BUFF_SIZE > 0) )
-                                    if((pEP->bMisc == USBUART_CLASS_AUDIO) &&
-                                       (epType == USBUART_EP_TYPE_BULK))
-                                    {
-                                        USBUART_midi_out_ep = i;
-                                    }
-                                #endif  /*  USBUART_ENABLE_MIDI_STREAMING*/
+                                
+                            #if (defined(USBUART_ENABLE_MIDI_STREAMING) && (USBUART_MIDI_OUT_BUFF_SIZE > 0))
+                                if ((pEP->bMisc == USBUART_CLASS_AUDIO) && (epType == USBUART_EP_TYPE_BULK))
+                                {
+                                    USBUART_midi_out_ep = i;
+                                }
+                            #endif  /* (USBUART_ENABLE_MIDI_STREAMING) */
                             }
-                            USBUART_EP[i].addr = pEP->addr;
-                            USBUART_EP[i].attrib = pEP->attributes;
 
-                            #if(USBUART_EP_MM == USBUART__EP_DMAAUTO)
-                                break;      /* use first EP setting in Auto memory managment */
-                            #endif /*  USBUART_EP_MM == USBUART__EP_DMAAUTO */
+                        #if (defined(USBUART_ENABLE_CDC_CLASS))
+                            if((pEP->bMisc == USBUART_CLASS_CDC_DATA) ||(pEP->bMisc == USBUART_CLASS_CDC))
+                            {
+                                cdcComNums = USBUART_Cdc_EpInit(pEP, i, cdcComNums);
+                            }
+                        #endif  /* (USBUART_ENABLE_CDC_CLASS) */
+
+                            #if (USBUART_EP_MANAGEMENT_DMA_AUTO)
+                                break;  /* Use first EP setting in Auto memory management */
+                            #endif /* (USBUART_EP_MANAGEMENT_DMA_AUTO) */
                         }
                     }
+                    
                     pEP = &pEP[1u];
                 }
             }
-        #endif /*  (USBUART_EP_MA == USBUART__MA_DYNAMIC) */
+        #endif /*  (USBUART_EP_MANAGEMENT_MANUAL && USBUART_EP_ALLOC_DYNAMIC) */
 
         /* Init class array for each interface and interface number for each EP.
         *  It is used for handling Class specific requests directed to either an
@@ -698,170 +762,181 @@ void USBUART_Config(uint8 clearAltSetting)
         pEP = (const T_USBUART_EP_SETTINGS_BLOCK CYCODE *) pTmp->p_list;
         for (i = 0u; i < ep; i++)
         {
-            /* Configure interface number for each EP*/
+            /* Configure interface number for each EP */
             USBUART_EP[pEP->addr & USBUART_DIR_UNUSED].interface = pEP->interface;
             pEP = &pEP[1u];
         }
-        /* Init pointer on interface class table*/
+        
+        /* Init pointer on interface class table */
         USBUART_interfaceClass = USBUART_GetInterfaceClassTablePtr();
-        /* Set the endpoint buffer addresses */
-
-        #if(USBUART_EP_MM != USBUART__EP_DMAAUTO)
-            for (ep = USBUART_EP1; ep < USBUART_MAX_EP; ep++)
-            {
-                USBUART_EP[ep].buffOffset = buffCount;
-                 buffCount += USBUART_EP[ep].bufferSize;
-            }
-        #endif /*  USBUART_EP_MM != USBUART__EP_DMAAUTO */
+        
+    /* Set the endpoint buffer addresses */
+    #if (!USBUART_EP_MANAGEMENT_DMA_AUTO)
+        buffCount = 0u;
+        for (ep = USBUART_EP1; ep < USBUART_MAX_EP; ++ep)
+        {
+            USBUART_EP[ep].buffOffset = buffCount;        
+            buffCount += USBUART_EP[ep].bufferSize;
+            
+        #if (USBUART_GEN_16BITS_EP_ACCESS)
+            /* Align EP buffers to be event size to access 16-bits DR register. */
+            buffCount += (0u != (buffCount & 0x01u)) ? 1u : 0u;
+        #endif /* (USBUART_GEN_16BITS_EP_ACCESS) */            
+        }
+    #endif /* (!USBUART_EP_MANAGEMENT_DMA_AUTO) */
 
         /* Configure hardware registers */
         USBUART_ConfigReg();
-    } /* USBUART_configuration > 0 */
+    }
 }
 
 
 /*******************************************************************************
 * Function Name: USBUART_ConfigAltChanged
-********************************************************************************
+****************************************************************************//**
 *
-* Summary:
 *  This routine update configuration for the required endpoints only.
 *  It is called after SET_INTERFACE request when Static memory allocation used.
 *
-* Parameters:
-*  None.
-*
-* Return:
-*  None.
-*
-* Reentrant:
+* \reentrant
 *  No.
 *
 *******************************************************************************/
 void USBUART_ConfigAltChanged(void) 
 {
     uint8 ep;
-    uint8 cur_ep;
-    uint8 i;
+    uint8 curEp;
     uint8 epType;
-    uint8 ri;
+    uint8 i;
+    uint8 interfaceNum;
 
     const T_USBUART_LUT CYCODE *pTmp;
     const T_USBUART_EP_SETTINGS_BLOCK CYCODE *pEP;
 
-
     /* Init Endpoints and Device Status if configured */
-    if(USBUART_configuration > 0u)
+    if (USBUART_configuration > 0u)
     {
+        /* Get number of endpoints configurations (ep). */
         pTmp = USBUART_GetConfigTablePtr(USBUART_configuration - 1u);
         pTmp = &pTmp[1u];
-        ep = pTmp->c;  /* For this table, c is the number of endpoints configurations  */
+        ep = pTmp->c;
 
-        /* Do not touch EP which doesn't need reconfiguration */
-        /* When Alt setting changed, the only required endpoints need to be reconfigured */
-        /* p_list points the endpoint setting table. */
+        /* Get pointer to endpoints setting table (pEP). */
         pEP = (const T_USBUART_EP_SETTINGS_BLOCK CYCODE *) pTmp->p_list;
+        
+        /* Look through all possible endpoint configurations. Find endpoints 
+        * which belong to current interface and alternate settings for 
+        * re-configuration.
+        */
+        interfaceNum = USBUART_interfaceNumber;
         for (i = 0u; i < ep; i++)
         {
-            /*If Alt setting changed and new is same with EP Alt */
-            if((USBUART_interfaceSetting[pEP->interface] !=
-                USBUART_interfaceSetting_last[pEP->interface] ) &&
-               (USBUART_interfaceSetting[pEP->interface] == pEP->altSetting) &&
-               (pEP->interface == CY_GET_REG8(USBUART_wIndexLo)))
+            /* Find endpoints which belong to current interface and alternate settings. */
+            if ((interfaceNum == pEP->interface) && 
+                (USBUART_interfaceSetting[interfaceNum] == pEP->altSetting))
             {
-                cur_ep = pEP->addr & USBUART_DIR_UNUSED;
-                ri = ((cur_ep - USBUART_EP1) << USBUART_EPX_CNTX_ADDR_SHIFT);
-                epType = pEP->attributes & USBUART_EP_TYPE_MASK;
-                if ((pEP->addr & USBUART_DIR_IN) != 0u)
+                curEp  = ((uint8) pEP->addr & USBUART_DIR_UNUSED);
+                epType = ((uint8) pEP->attributes & USBUART_EP_TYPE_MASK);
+                
+                /* Change the SIE mode for the selected EP to NAK ALL */
+                USBUART_EP[curEp].epToggle   = 0u;
+                USBUART_EP[curEp].addr       = pEP->addr;
+                USBUART_EP[curEp].attrib     = pEP->attributes;
+                USBUART_EP[curEp].bufferSize = pEP->bufferSize;
+
+                if (0u != (pEP->addr & USBUART_DIR_IN))
                 {
                     /* IN Endpoint */
-                    USBUART_EP[cur_ep].apiEpState = USBUART_EVENT_PENDING;
-                    USBUART_EP[cur_ep].epMode = (epType == USBUART_EP_TYPE_ISOC) ?
-                                                USBUART_MODE_ISO_IN : USBUART_MODE_ACK_IN;
+                    USBUART_EP[curEp].epMode     = USBUART_GET_ACTIVE_IN_EP_CR0_MODE(epType);
+                    USBUART_EP[curEp].apiEpState = USBUART_EVENT_PENDING;
                 }
                 else
                 {
                     /* OUT Endpoint */
-                    USBUART_EP[cur_ep].apiEpState = USBUART_NO_EVENT_PENDING;
-                    USBUART_EP[cur_ep].epMode = (epType == USBUART_EP_TYPE_ISOC) ?
-                                                USBUART_MODE_ISO_OUT : USBUART_MODE_ACK_OUT;
+                    USBUART_EP[curEp].epMode     = USBUART_GET_ACTIVE_OUT_EP_CR0_MODE(epType);
+                    USBUART_EP[curEp].apiEpState = USBUART_NO_EVENT_PENDING;
                 }
-                 /* Change the SIE mode for the selected EP to NAK ALL */
-                 CY_SET_REG8((reg8 *)(USBUART_SIE_EP1_CR0_IND + ri), USBUART_MODE_NAK_IN_OUT);
-                USBUART_EP[cur_ep].bufferSize = pEP->bufferSize;
-                USBUART_EP[cur_ep].addr = pEP->addr;
-                USBUART_EP[cur_ep].attrib = pEP->attributes;
+                
+                /* Make SIE to NAK any endpoint requests */
+                USBUART_SIE_EP_BASE.sieEp[curEp].epCr0 = USBUART_MODE_NAK_IN_OUT;
 
-                /* Clear the data toggle */
-                USBUART_EP[cur_ep].epToggle = 0u;
+            #if (USBUART_EP_MANAGEMENT_DMA_AUTO)
+                /* Clear IN data ready. */
+                USBUART_ARB_EP_BASE.arbEp[curEp].epCfg &= (uint8) ~USBUART_ARB_EPX_CFG_IN_DATA_RDY;
 
-                /* Dynamic reconfiguration for mode 3 transfer */
-            #if(USBUART_EP_MM == USBUART__EP_DMAAUTO)
-                /* In_data_rdy for selected EP should be set to 0 */
-                * (reg8 *)(USBUART_ARB_EP1_CFG_IND + ri) &= (uint8)~USBUART_ARB_EPX_CFG_IN_DATA_RDY;
-
-                /* write the EP number for which reconfiguration is required */
-                USBUART_DYN_RECONFIG_REG = (cur_ep - USBUART_EP1) <<
-                                                    USBUART_DYN_RECONFIG_EP_SHIFT;
-                /* Set the dyn_config_en bit in dynamic reconfiguration register */
+                /* Select endpoint number of reconfiguration */
+                USBUART_DYN_RECONFIG_REG = (uint8) ((curEp - 1u) << USBUART_DYN_RECONFIG_EP_SHIFT);
+                
+                /* Request for dynamic re-configuration of endpoint. */
                 USBUART_DYN_RECONFIG_REG |= USBUART_DYN_RECONFIG_ENABLE;
-                /* wait for the dyn_config_rdy bit to set by the block,
-                *  this bit will be set to 1 when block is ready for reconfiguration.
-                */
-                while((USBUART_DYN_RECONFIG_REG & USBUART_DYN_RECONFIG_RDY_STS) == 0u)
+                
+                /* Wait until block is ready for re-configuration */
+                while (0u == (USBUART_DYN_RECONFIG_REG & USBUART_DYN_RECONFIG_RDY_STS))
                 {
-                    ;
                 }
-                /* Once dyn_config_rdy bit is set, FW can change the EP configuration. */
+                
+                /* Once DYN_RECONFIG_RDY_STS bit is set, FW can change the EP configuration. */
                 /* Change EP Type with new direction */
-                if((pEP->addr & USBUART_DIR_IN) == 0u)
+                if (0u != (pEP->addr & USBUART_DIR_IN))
                 {
-                    USBUART_EP_TYPE_REG |= (uint8)(0x01u << (cur_ep - USBUART_EP1));
+                    /* Set endpoint type: 0 - IN and 1 - OUT. */
+                    USBUART_EP_TYPE_REG &= (uint8) ~(uint8)((uint8) 0x01u << (curEp - 1u));
+                    
+                #if (CY_PSOC4)
+                    /* Clear DMA_TERMIN for IN endpoint */
+                    USBUART_ARB_EP_BASE.arbEp[curEp].epIntEn &= (uint32) ~USBUART_ARB_EPX_INT_DMA_TERMIN;
+                #endif /* (CY_PSOC4) */
                 }
                 else
                 {
-                    USBUART_EP_TYPE_REG &= (uint8)~(uint8)(0x01u << (cur_ep - USBUART_EP1));
+                    /* Set endpoint type: 0 - IN and 1- OUT. */
+                    USBUART_EP_TYPE_REG |= (uint8) ((uint8) 0x01u << (curEp - 1u));
+                    
+                #if (CY_PSOC4)
+                    /* Set DMA_TERMIN for OUT endpoint */
+                    USBUART_ARB_EP_BASE.arbEp[curEp].epIntEn |= (uint32) USBUART_ARB_EPX_INT_DMA_TERMIN;
+                #endif /* (CY_PSOC4) */
                 }
-                /* dynamic reconfiguration enable bit cleared, pointers and control/status
-                *  signals for the selected EP is cleared/re-initialized on negative edge
-                *  of dynamic reconfiguration enable bit).
+                
+                /* Complete dynamic re-configuration: all endpoint related status and signals 
+                * are set into the default state.
                 */
-                USBUART_DYN_RECONFIG_REG &= (uint8)~USBUART_DYN_RECONFIG_ENABLE;
-                /* The main loop has to re-enable DMA and OUT endpoint*/
+                USBUART_DYN_RECONFIG_REG &= (uint8) ~USBUART_DYN_RECONFIG_ENABLE;
+
             #else
-                CY_SET_REG8((reg8 *)(USBUART_SIE_EP1_CNT0_IND + ri),
-                                                                USBUART_EP[cur_ep].bufferSize >> 8u);
-                CY_SET_REG8((reg8 *)(USBUART_SIE_EP1_CNT1_IND + ri),
-                                                                USBUART_EP[cur_ep].bufferSize & 0xFFu);
-                CY_SET_REG8((reg8 *)(USBUART_ARB_RW1_RA_IND + ri),
-                                                                USBUART_EP[cur_ep].buffOffset & 0xFFu);
-                CY_SET_REG8((reg8 *)(USBUART_ARB_RW1_RA_MSB_IND + ri),
-                                                                USBUART_EP[cur_ep].buffOffset >> 8u);
-                CY_SET_REG8((reg8 *)(USBUART_ARB_RW1_WA_IND + ri),
-                                                                USBUART_EP[cur_ep].buffOffset & 0xFFu);
-                CY_SET_REG8((reg8 *)(USBUART_ARB_RW1_WA_MSB_IND + ri),
-                                                                USBUART_EP[cur_ep].buffOffset >> 8u);
-            #endif /*  USBUART_EP_MM == USBUART__EP_DMAAUTO */
+                USBUART_SIE_EP_BASE.sieEp[curEp].epCnt0 = HI8(USBUART_EP[curEp].bufferSize);
+                USBUART_SIE_EP_BASE.sieEp[curEp].epCnt1 = LO8(USBUART_EP[curEp].bufferSize);
+                
+                #if (CY_PSOC4)
+                    USBUART_ARB_EP16_BASE.arbEp[curEp].rwRa16  = (uint32) USBUART_EP[curEp].buffOffset;
+                    USBUART_ARB_EP16_BASE.arbEp[curEp].rwWa16  = (uint32) USBUART_EP[curEp].buffOffset;
+                #else
+                    USBUART_ARB_EP_BASE.arbEp[curEp].rwRa    = LO8(USBUART_EP[curEp].buffOffset);
+                    USBUART_ARB_EP_BASE.arbEp[curEp].rwRaMsb = HI8(USBUART_EP[curEp].buffOffset);
+                    USBUART_ARB_EP_BASE.arbEp[curEp].rwWa    = LO8(USBUART_EP[curEp].buffOffset);
+                    USBUART_ARB_EP_BASE.arbEp[curEp].rwWaMsb = HI8(USBUART_EP[curEp].buffOffset);
+                #endif /* (CY_PSOC4) */                
+            #endif /* (USBUART_EP_MANAGEMENT_DMA_AUTO) */
             }
-            /* Get next EP element */
-            pEP = &pEP[1u];
+            
+            pEP = &pEP[1u]; /* Get next EP element */
         }
-    }   /* USBUART_configuration > 0 */
+        
+        /* The main loop has to re-enable DMA and OUT endpoint */
+    }
 }
 
 
 /*******************************************************************************
 * Function Name: USBUART_GetConfigTablePtr
-********************************************************************************
+****************************************************************************//**
 *
-* Summary:
 *  This routine returns a pointer a configuration table entry
 *
-* Parameters:
-*  confIndex:  Configuration Index
+*  \param confIndex:  Configuration Index
 *
-* Return:
-*  Device Descriptor pointer or NULL when descriptor isn't exists.
+* \return
+*  Device Descriptor pointer or NULL when descriptor does not exist.
 *
 *******************************************************************************/
 const T_USBUART_LUT CYCODE *USBUART_GetConfigTablePtr(uint8 confIndex)
@@ -873,10 +948,11 @@ const T_USBUART_LUT CYCODE *USBUART_GetConfigTablePtr(uint8 confIndex)
     pTmp = (const T_USBUART_LUT CYCODE *) USBUART_TABLE[USBUART_device].p_list;
 
     /* The first entry points to the Device Descriptor,
+    *  the second entry point to the BOS Descriptor
     *  the rest configuration entries.
     *  Set pointer to the first Configuration Descriptor
     */
-    pTmp = &pTmp[1u];
+    pTmp = &pTmp[2u];
     /* For this table, c is the number of configuration descriptors  */
     if(confIndex >= pTmp->c)   /* Verify that required configuration descriptor exists */
     {
@@ -887,21 +963,48 @@ const T_USBUART_LUT CYCODE *USBUART_GetConfigTablePtr(uint8 confIndex)
         pTmp = (const T_USBUART_LUT CYCODE *) pTmp[confIndex].p_list;
     }
 
-    return( pTmp );
+    return (pTmp);
 }
+
+
+#if (USBUART_BOS_ENABLE)
+    /*******************************************************************************
+    * Function Name: USBUART_GetBOSPtr
+    ****************************************************************************//**
+    *
+    *  This routine returns a pointer a BOS table entry
+    *
+    *  
+    *
+    * \return
+    *  BOS Descriptor pointer or NULL when descriptor does not exist.
+    *
+    *******************************************************************************/
+    const T_USBUART_LUT CYCODE *USBUART_GetBOSPtr(void)
+                                                            
+    {
+        /* Device Table */
+        const T_USBUART_LUT CYCODE *pTmp;
+
+        pTmp = (const T_USBUART_LUT CYCODE *) USBUART_TABLE[USBUART_device].p_list;
+
+        /* The first entry points to the Device Descriptor,
+        *  the second entry points to the BOS Descriptor
+        */
+        pTmp = &pTmp[1u];
+        pTmp = (const T_USBUART_LUT CYCODE *) pTmp->p_list;
+        return (pTmp);
+    }
+#endif /* (USBUART_BOS_ENABLE) */
 
 
 /*******************************************************************************
 * Function Name: USBUART_GetDeviceTablePtr
-********************************************************************************
+****************************************************************************//**
 *
-* Summary:
 *  This routine returns a pointer to the Device table
 *
-* Parameters:
-*  None.
-*
-* Return:
+* \return
 *  Device Table pointer
 *
 *******************************************************************************/
@@ -915,16 +1018,12 @@ const T_USBUART_LUT CYCODE *USBUART_GetDeviceTablePtr(void)
 
 /*******************************************************************************
 * Function Name: USB_GetInterfaceClassTablePtr
-********************************************************************************
+****************************************************************************//**
 *
-* Summary:
 *  This routine returns Interface Class table pointer, which contains
 *  the relation between interface number and interface class.
 *
-* Parameters:
-*  None.
-*
-* Return:
+* \return
 *  Interface Class table pointer.
 *
 *******************************************************************************/
@@ -936,7 +1035,7 @@ const uint8 CYCODE *USBUART_GetInterfaceClassTablePtr(void)
     uint8 currentInterfacesNum;
 
     pTmp = USBUART_GetConfigTablePtr(USBUART_configuration - 1u);
-    if( pTmp != NULL )
+    if (pTmp != NULL)
     {
         currentInterfacesNum  = ((const uint8 *) pTmp->p_list)[USBUART_CONFIG_DESCR_NUM_INTERFACES];
         /* Third entry in the LUT starts the Interface Table pointers */
@@ -949,53 +1048,50 @@ const uint8 CYCODE *USBUART_GetInterfaceClassTablePtr(void)
         pInterfaceClass = (const uint8 CYCODE *) NULL;
     }
 
-    return( pInterfaceClass );
+    return (pInterfaceClass);
 }
 
 
 /*******************************************************************************
 * Function Name: USBUART_TerminateEP
-********************************************************************************
+****************************************************************************//**
 *
-* Summary:
 *  This function terminates the specified USBFS endpoint.
 *  This function should be used before endpoint reconfiguration.
 *
-* Parameters:
-*  Endpoint number.
+*  \param ep Contains the data endpoint number.
 *
-* Return:
-*  None.
-*
-* Reentrant:
+*  \reentrant
 *  No.
 *
+* \sideeffect
+* 
+* The device responds with a NAK for any transactions on the selected endpoint.
+*   
 *******************************************************************************/
-void USBUART_TerminateEP(uint8 ep) 
+void USBUART_TerminateEP(uint8 epNumber) 
 {
-    uint8 ri;
+    /* Get endpoint number */
+    epNumber &= USBUART_DIR_UNUSED;
 
-    ep &= USBUART_DIR_UNUSED;
-    ri = ((ep - USBUART_EP1) << USBUART_EPX_CNTX_ADDR_SHIFT);
-
-    if ((ep > USBUART_EP0) && (ep < USBUART_MAX_EP))
+    if ((epNumber > USBUART_EP0) && (epNumber < USBUART_MAX_EP))
     {
         /* Set the endpoint Halt */
-        USBUART_EP[ep].hwEpState |= (USBUART_ENDPOINT_STATUS_HALT);
+        USBUART_EP[epNumber].hwEpState |= USBUART_ENDPOINT_STATUS_HALT;
 
         /* Clear the data toggle */
-        USBUART_EP[ep].epToggle = 0u;
-        USBUART_EP[ep].apiEpState = USBUART_NO_EVENT_ALLOWED;
+        USBUART_EP[epNumber].epToggle = 0u;
+        USBUART_EP[epNumber].apiEpState = USBUART_NO_EVENT_ALLOWED;
 
-        if ((USBUART_EP[ep].addr & USBUART_DIR_IN) != 0u)
-        {
+        if ((USBUART_EP[epNumber].addr & USBUART_DIR_IN) != 0u)
+        {   
             /* IN Endpoint */
-            CY_SET_REG8((reg8 *)(USBUART_SIE_EP1_CR0_IND + ri), USBUART_MODE_NAK_IN);
+            USBUART_SIE_EP_BASE.sieEp[epNumber].epCr0 = USBUART_MODE_NAK_IN;
         }
         else
         {
             /* OUT Endpoint */
-            CY_SET_REG8((reg8 *)(USBUART_SIE_EP1_CR0_IND + ri), USBUART_MODE_NAK_OUT);
+            USBUART_SIE_EP_BASE.sieEp[epNumber].epCr0 = USBUART_MODE_NAK_OUT;
         }
     }
 }
@@ -1003,30 +1099,24 @@ void USBUART_TerminateEP(uint8 ep)
 
 /*******************************************************************************
 * Function Name: USBUART_SetEndpointHalt
-********************************************************************************
+****************************************************************************//**
 *
-* Summary:
 *  This routine handles set endpoint halt.
 *
-* Parameters:
-*  None.
-*
-* Return:
+* \return
 *  requestHandled.
 *
-* Reentrant:
+* \reentrant
 *  No.
 *
 *******************************************************************************/
 uint8 USBUART_SetEndpointHalt(void) 
 {
-    uint8 ep;
-    uint8 ri;
     uint8 requestHandled = USBUART_FALSE;
-
+    uint8 ep;
+    
     /* Set endpoint halt */
-    ep = CY_GET_REG8(USBUART_wIndexLo) & USBUART_DIR_UNUSED;
-    ri = ((ep - USBUART_EP1) << USBUART_EPX_CNTX_ADDR_SHIFT);
+    ep = USBUART_wIndexLoReg & USBUART_DIR_UNUSED;
 
     if ((ep > USBUART_EP0) && (ep < USBUART_MAX_EP))
     {
@@ -1040,86 +1130,84 @@ uint8 USBUART_SetEndpointHalt(void)
         if ((USBUART_EP[ep].addr & USBUART_DIR_IN) != 0u)
         {
             /* IN Endpoint */
-            CY_SET_REG8((reg8 *)(USBUART_SIE_EP1_CR0_IND + ri), USBUART_MODE_STALL_DATA_EP |
-                                                               USBUART_MODE_ACK_IN);
+            USBUART_SIE_EP_BASE.sieEp[ep].epCr0 = (USBUART_MODE_STALL_DATA_EP | 
+                                                            USBUART_MODE_ACK_IN);
         }
         else
         {
             /* OUT Endpoint */
-            CY_SET_REG8((reg8 *)(USBUART_SIE_EP1_CR0_IND + ri), USBUART_MODE_STALL_DATA_EP |
-                                                               USBUART_MODE_ACK_OUT);
+            USBUART_SIE_EP_BASE.sieEp[ep].epCr0 = (USBUART_MODE_STALL_DATA_EP | 
+                                                            USBUART_MODE_ACK_OUT);
         }
         requestHandled = USBUART_InitNoDataControlTransfer();
     }
 
-    return(requestHandled);
+    return (requestHandled);
 }
 
 
 /*******************************************************************************
 * Function Name: USBUART_ClearEndpointHalt
-********************************************************************************
+****************************************************************************//**
 *
-* Summary:
 *  This routine handles clear endpoint halt.
 *
-* Parameters:
-*  None.
-*
-* Return:
+* \return
 *  requestHandled.
 *
-* Reentrant:
+* \reentrant
 *  No.
 *
 *******************************************************************************/
 uint8 USBUART_ClearEndpointHalt(void) 
 {
-    uint8 ep;
-    uint8 ri;
     uint8 requestHandled = USBUART_FALSE;
+    uint8 ep;
 
     /* Clear endpoint halt */
-    ep = CY_GET_REG8(USBUART_wIndexLo) & USBUART_DIR_UNUSED;
-    ri = ((ep - USBUART_EP1) << USBUART_EPX_CNTX_ADDR_SHIFT);
+    ep = USBUART_wIndexLoReg & USBUART_DIR_UNUSED;
 
     if ((ep > USBUART_EP0) && (ep < USBUART_MAX_EP))
     {
         /* Clear the endpoint Halt */
-        USBUART_EP[ep].hwEpState &= (uint8)~(USBUART_ENDPOINT_STATUS_HALT);
+        USBUART_EP[ep].hwEpState &= (uint8) ~USBUART_ENDPOINT_STATUS_HALT;
 
         /* Clear the data toggle */
         USBUART_EP[ep].epToggle = 0u;
+        
         /* Clear toggle bit for already armed packet */
-        CY_SET_REG8((reg8 *)(USBUART_SIE_EP1_CNT0_IND + ri), CY_GET_REG8(
-                    (reg8 *)(USBUART_SIE_EP1_CNT0_IND + ri)) & (uint8)~USBUART_EPX_CNT_DATA_TOGGLE);
+        USBUART_SIE_EP_BASE.sieEp[ep].epCnt0 = (uint8) ~(uint8)USBUART_EPX_CNT_DATA_TOGGLE;
+        
         /* Return API State as it was defined before */
-        USBUART_EP[ep].apiEpState &= (uint8)~USBUART_NO_EVENT_ALLOWED;
+        USBUART_EP[ep].apiEpState &= (uint8) ~USBUART_NO_EVENT_ALLOWED;
 
         if ((USBUART_EP[ep].addr & USBUART_DIR_IN) != 0u)
         {
             /* IN Endpoint */
             if(USBUART_EP[ep].apiEpState == USBUART_IN_BUFFER_EMPTY)
-            {       /* Wait for next packet from application */
-                CY_SET_REG8((reg8 *)(USBUART_SIE_EP1_CR0_IND + ri), USBUART_MODE_NAK_IN);
+            {       
+                /* Wait for next packet from application */
+                USBUART_SIE_EP_BASE.sieEp[ep].epCr0 = USBUART_MODE_NAK_IN;
             }
             else    /* Continue armed transfer */
             {
-                CY_SET_REG8((reg8 *)(USBUART_SIE_EP1_CR0_IND + ri), USBUART_MODE_ACK_IN);
+                USBUART_SIE_EP_BASE.sieEp[ep].epCr0 = USBUART_MODE_ACK_IN;
             }
         }
         else
         {
             /* OUT Endpoint */
-            if(USBUART_EP[ep].apiEpState == USBUART_OUT_BUFFER_FULL)
-            {       /* Allow application to read full buffer */
-                CY_SET_REG8((reg8 *)(USBUART_SIE_EP1_CR0_IND + ri), USBUART_MODE_NAK_OUT);
+            if (USBUART_EP[ep].apiEpState == USBUART_OUT_BUFFER_FULL)
+            {       
+                /* Allow application to read full buffer */
+                USBUART_SIE_EP_BASE.sieEp[ep].epCr0 = USBUART_MODE_NAK_OUT;
             }
             else    /* Mark endpoint as empty, so it will be reloaded */
             {
-                CY_SET_REG8((reg8 *)(USBUART_SIE_EP1_CR0_IND + ri), USBUART_MODE_ACK_OUT);
+                USBUART_SIE_EP_BASE.sieEp[ep].epCr0 = USBUART_MODE_ACK_OUT;
             }
         }
+        
         requestHandled = USBUART_InitNoDataControlTransfer();
     }
 
@@ -1129,42 +1217,42 @@ uint8 USBUART_ClearEndpointHalt(void)
 
 /*******************************************************************************
 * Function Name: USBUART_ValidateAlternateSetting
-********************************************************************************
+****************************************************************************//**
 *
-* Summary:
 *  Validates (and records) a SET INTERFACE request.
 *
-* Parameters:
-*  None.
-*
-* Return:
+* \return
 *  requestHandled.
 *
-* Reentrant:
+* \reentrant
 *  No.
 *
 *******************************************************************************/
 uint8 USBUART_ValidateAlternateSetting(void) 
 {
-    uint8 requestHandled = USBUART_TRUE;
+    uint8 requestHandled = USBUART_FALSE;
+    
     uint8 interfaceNum;
+    uint8 curInterfacesNum;
     const T_USBUART_LUT CYCODE *pTmp;
-    uint8 currentInterfacesNum;
-
-    interfaceNum = CY_GET_REG8(USBUART_wIndexLo);
-    /* Validate interface setting, stall if invalid. */
+    
+    /* Get interface number from the request. */
+    interfaceNum = (uint8) USBUART_wIndexLoReg;
+    
+    /* Get number of interfaces for current configuration. */
     pTmp = USBUART_GetConfigTablePtr(USBUART_configuration - 1u);
-    currentInterfacesNum  = ((const uint8 *) pTmp->p_list)[USBUART_CONFIG_DESCR_NUM_INTERFACES];
+    curInterfacesNum  = ((const uint8 *) pTmp->p_list)[USBUART_CONFIG_DESCR_NUM_INTERFACES];
 
-    if((interfaceNum >= currentInterfacesNum) || (interfaceNum >= USBUART_MAX_INTERFACES_NUMBER))
-    {   /* Wrong interface number */
-        requestHandled = USBUART_FALSE;
-    }
-    else
+    /* Validate that interface number is within range. */
+    if ((interfaceNum <= curInterfacesNum) || (interfaceNum <= USBUART_MAX_INTERFACES_NUMBER))
     {
-        /* Save current Alt setting to find out the difference in Config() function */
-        USBUART_interfaceSetting_last[interfaceNum] = USBUART_interfaceSetting[interfaceNum];
-        USBUART_interfaceSetting[interfaceNum] = CY_GET_REG8(USBUART_wValueLo);
+        /* Save current and new alternate settings (come with request) to make 
+        * desicion about following endpoint re-configuration.
+        */
+        USBUART_interfaceSettingLast[interfaceNum] = USBUART_interfaceSetting[interfaceNum];
+        USBUART_interfaceSetting[interfaceNum]     = (uint8) USBUART_wValueLoReg;
+        
+        requestHandled = USBUART_TRUE;
     }
 
     return (requestHandled);
